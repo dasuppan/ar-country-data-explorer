@@ -1,109 +1,78 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
 using UnityEngine;
-using UnityEngine.Serialization;
-using UnityEngine.XR.ARFoundation;
-using UnityEngine.XR.ARSubsystems;
+
+public class Country2
+{
+    public Country2(string name, Sprite flagSprite, Texture2D trackerTexture, bool isPivot = false)
+    {
+        this.name = name;
+        this.flagSprite = flagSprite;
+        this.trackerTexture = trackerTexture;
+        this.IsPivot = IsPivot;
+    }
+
+    public readonly string name;
+    public readonly Sprite flagSprite;
+    public readonly Texture2D trackerTexture;
+    public readonly bool IsPivot;
+    public readonly Dictionary<InfoCategory, double?> data = new();
+};
 
 public class MainManager : UnitySingleton<MainManager>
 {
-    [SerializeField] private float trackerWidthInMeters = 0.09f;
-    [FormerlySerializedAs("countries")] public List<CountryDefinitionSO> countryDefinitions = new();
-    private ARTrackedImageManager trackedImageManager;
-    [SerializeField]
-    private GameObject countryPrefab;
+    [SerializeField] private CountryDefinitionSO pivotCountryDefinition;
+    public List<CountryDefinitionSO> countryDefinitions = new();
+
+    // Structure: AT, Austria, Value
+    private const int colCount = 3;
+    private const int countryCodeIndex = 0;
+    private const int countryNameIndex = 1;
+    private const int countryValueIndex = 2;
+    [SerializeField] public InfoCategoryTextAssetDictionary countryInfo = new();
+
+    private readonly List<Country2> countries = new();
 
     /*private readonly Dictionary<string, GameObject> instantiatedCountries = new();*/
 
     void Start()
     {
-        trackedImageManager = GetComponent<ARTrackedImageManager>();
+        countries.AddRange(
+            countryDefinitions.Select(
+                cDef => new Country2(
+                    cDef.countryName,
+                    cDef.flagSprite,
+                    cDef.trackerTexture,
+                    cDef == pivotCountryDefinition
+                )
+            )
+        );
 
-        if (trackedImageManager == null)
+        foreach (var (category, file) in countryInfo)
         {
-            Debug.LogError("No ARTrackedImageManager component found.");
-            return;
-        }
-
-        /*var library = trackedImageManager.CreateRuntimeLibrary();
-        if (library is MutableRuntimeReferenceImageLibrary mutableLibrary)
-        {
-            foreach (var country in countries)
+            string[] data = file.text.Split(new[] { ";", "\n" }, StringSplitOptions.None);
+            int tableRowCount = data.Length / colCount - 1;
+            for (int i = 0; i < tableRowCount; i++)
             {
-                Debug.LogWarning(
-                    $"Format supported? {mutableLibrary.IsTextureFormatSupported(country.tracker.format)}");
-                var imageToAdd = country.tracker;
-                mutableLibrary.ScheduleAddImageWithValidationJob(
-                    imageToAdd,
-                    imageToAdd.name,
-                    trackerWidthInMeters);
+                string countryName = data[colCount * (i + 1) + countryNameIndex];
+                double countryValue = double.Parse(data[colCount * (i + 1) + countryValueIndex]);
+                Country2 country = countries.FirstOrDefault(c => c.name == countryName);
+                if (country == null) continue;
+                country.data[category] = countryValue;
             }
         }
-        else
-        {
-            Debug.LogError("Can't fill library with images.");
-            return;
-        }*/
 
-        Debug.Log("Init done.");
+        Debug.LogWarning("Countries initialized.");
+    }
+
+    public Country2 GetCountryByReferenceImageName(string imgName)
+    {
+        return countries.FirstOrDefault(c => c.trackerTexture.name == imgName);
     }
 
     void Update()
     {
     }
-
-    /*void OnEnable() => trackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
-
-    void OnDisable() => trackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
-
-    void OnTrackedImagesChanged(ARTrackedImagesChangedEventArgs eventArgs)
-    {
-        Debug.LogError($"Change detected");
-        foreach (var newImage in eventArgs.added)
-        {
-            var countryDef =
-                countryDefinitions.FirstOrDefault(c => c.trackerTexture.name == newImage.referenceImage.name);
-            if (countryDef != null)
-            {
-                Debug.LogWarning($"Adding country {countryDef.name}");
-                if (instantiatedCountries.ContainsKey(countryDef.countryName))
-                {
-                    return;
-                }
-
-                var countryGo = Instantiate(countryPrefab, newImage.transform);
-                countryGo.name = countryDef.countryName;
-                countryGo.GetComponent<Country>().Init(countryDef);
-                instantiatedCountries.Add(countryDef.countryName, countryGo);
-            }
-        }
-
-        foreach (var updatedImage in eventArgs.updated)
-        {
-            // Handle updated event
-        }
-
-        foreach (var removedImage in eventArgs.removed)
-        {
-            
-            var countryDef =
-                countryDefinitions.FirstOrDefault(c => c.trackerTexture.name == removedImage.referenceImage.name);
-            if (countryDef != null)
-            {
-                Debug.LogWarning($"Removing country {countryDef.name}");
-                if (instantiatedCountries.ContainsKey(countryDef.countryName))
-                {
-                    var countryGo = instantiatedCountries[countryDef.countryName];
-                    if (countryGo != null)
-                    {
-                        Destroy(countryGo);
-                    }
-
-                    instantiatedCountries.Remove(countryDef.countryName);
-                }
-            }
-        }
-    }*/
 }

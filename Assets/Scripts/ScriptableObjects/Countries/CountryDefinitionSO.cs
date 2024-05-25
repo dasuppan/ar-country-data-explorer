@@ -8,6 +8,6 @@ namespace ScriptableObjects.Countries
     {
         public string countryName;
         public Sprite flagSprite;
-        [FormerlySerializedAs("tracker")] public Texture2D trackerTexture;
+        public Texture2D trackerTexture;
     }
 }

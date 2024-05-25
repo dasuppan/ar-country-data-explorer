@@ -6,18 +6,25 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 
+public enum InfoCategory
+{
+    IMPORT,
+    EXPORT
+}
+
 public class Country : MonoBehaviour
 {
     void Start()
     {
-        var countryDef =
-            MainManager.Instance.countryDefinitions.FirstOrDefault(c =>
-                c.trackerTexture.name == GetComponent<ARTrackedImage>().referenceImage.name
-            );
-        if (countryDef != null)
+        Country2 country = MainManager.Instance.GetCountryByReferenceImageName(
+            GetComponent<ARTrackedImage>().referenceImage.name
+        );
+        if (country != null)
         {
-            GetComponent<SpriteRenderer>().sprite = countryDef.flagSprite;
-            Debug.LogWarning($"Adding country {countryDef.name}");
+            GetComponent<SpriteRenderer>().sprite = country.flagSprite;
+            Debug.LogWarning($"Adding country {country.name}");
+            Debug.LogWarning($"Is country pivot? {country.IsPivot}");
+            Debug.LogWarning($"Country {country.name} has {country.data.Count} data points.");
         }
         else
         {
@@ -28,7 +35,7 @@ public class Country : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log("Scoobidoobidoo.");
+        //Debug.Log("Scoobidoobidoo.");
         transform.LookAt(Camera.main.transform, Vector3.up);
     }
 }
