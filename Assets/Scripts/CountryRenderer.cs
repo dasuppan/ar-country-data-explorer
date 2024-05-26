@@ -1,9 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Splines;
 using UnityEngine.XR.ARFoundation;
 
 public enum InfoCategory
@@ -12,7 +14,7 @@ public enum InfoCategory
     EXPORT
 }
 
-public class Country : MonoBehaviour
+public class CountryRenderer : MonoBehaviour
 {
     void Start()
     {
@@ -23,13 +25,24 @@ public class Country : MonoBehaviour
         {
             GetComponent<SpriteRenderer>().sprite = country.flagSprite;
             Debug.LogWarning($"Adding country {country.name}");
-            Debug.LogWarning($"Is country pivot? {country.IsPivot}");
+            Debug.LogWarning($"Is country pivot? {country.isPivot}");
             Debug.LogWarning($"Country {country.name} has {country.data.Count} data points.");
+            MainManager.Instance.RegisterCountryRenderer(this, country);
         }
         else
         {
             Debug.LogWarning("Tracker is not a country.");
         }
+    }
+
+    private void Awake()
+    {
+        
+    }
+
+    private void OnDestroy()
+    {
+        
     }
 
     // Update is called once per frame

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
 using UnityEngine;
+using UnityEngine.XR.ARFoundation;
 
 public class Country2
 {
@@ -11,13 +12,13 @@ public class Country2
         this.name = name;
         this.flagSprite = flagSprite;
         this.trackerTexture = trackerTexture;
-        this.IsPivot = IsPivot;
+        this.isPivot = isPivot;
     }
 
     public readonly string name;
     public readonly Sprite flagSprite;
     public readonly Texture2D trackerTexture;
-    public readonly bool IsPivot;
+    public readonly bool isPivot;
     public readonly Dictionary<InfoCategory, double?> data = new();
 };
 
@@ -32,13 +33,13 @@ public class MainManager : UnitySingleton<MainManager>
     private const int countryNameIndex = 1;
     private const int countryValueIndex = 2;
     [SerializeField] public InfoCategoryTextAssetDictionary countryInfo = new();
-
     private readonly List<Country2> countries = new();
 
-    /*private readonly Dictionary<string, GameObject> instantiatedCountries = new();*/
+    private readonly Dictionary<Country2, CountryRenderer> instantiatedCountries = new();
 
     void Start()
     {
+        // Instantiate countries
         countries.AddRange(
             countryDefinitions.Select(
                 cDef => new Country2(
@@ -50,6 +51,7 @@ public class MainManager : UnitySingleton<MainManager>
             )
         );
 
+        // Parse CSV data
         foreach (var (category, file) in countryInfo)
         {
             string[] data = file.text.Split(new[] { ";", "\n" }, StringSplitOptions.None);
@@ -70,6 +72,20 @@ public class MainManager : UnitySingleton<MainManager>
     public Country2 GetCountryByReferenceImageName(string imgName)
     {
         return countries.FirstOrDefault(c => c.trackerTexture.name == imgName);
+    }
+
+    public void RegisterCountryRenderer(CountryRenderer countryRenderer, Country2 country)
+    {
+        instantiatedCountries.Add(country, countryRenderer);
+    }
+    
+    public void DeregisterCountryRenderer(CountryRenderer countryRenderer)
+    {
+        // TODO: Continue here
+        /*var countryKey = instantiatedCountries.FirstOrDefault(pair => pair.Value == countryRenderer);
+        
+        instantiatedCountries.Remove(
+            );*/
     }
 
     void Update()
