@@ -1,24 +1,13 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using ScriptableObjects.Countries;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Splines;
 using UnityEngine.XR.ARFoundation;
-
-public enum InfoCategory
-{
-    IMPORT,
-    EXPORT
-}
 
 public class CountryRenderer : MonoBehaviour
 {
+    public Country2 country { get; private set; }
+
     void Start()
     {
-        Country2 country = MainManager.Instance.GetCountryByReferenceImageName(
+        country = MainManager.Instance.GetCountryByReferenceImageName(
             GetComponent<ARTrackedImage>().referenceImage.name
         );
         if (country != null)
@@ -27,22 +16,18 @@ public class CountryRenderer : MonoBehaviour
             Debug.LogWarning($"Adding country {country.name}");
             Debug.LogWarning($"Is country pivot? {country.isPivot}");
             Debug.LogWarning($"Country {country.name} has {country.data.Count} data points.");
-            MainManager.Instance.RegisterCountryRenderer(this, country);
         }
         else
         {
             Debug.LogWarning("Tracker is not a country.");
         }
-    }
 
-    private void Awake()
-    {
-        
+        MainManager.Instance.RegisterCountryRenderer(this);
     }
 
     private void OnDestroy()
     {
-        
+        MainManager.Instance.DeregisterCountryRenderer(this);
     }
 
     // Update is called once per frame

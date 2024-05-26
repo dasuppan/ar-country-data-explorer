@@ -5,6 +5,18 @@ using ScriptableObjects.Countries;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 
+public enum InfoCategory
+{
+    IMPORT,
+    EXPORT
+}
+
+public enum CategoryType
+{
+    INGOING,
+    OUTGOING
+}
+
 public class Country2
 {
     public Country2(string name, Sprite flagSprite, Texture2D trackerTexture, bool isPivot = false)
@@ -33,9 +45,14 @@ public class MainManager : UnitySingleton<MainManager>
     private const int countryNameIndex = 1;
     private const int countryValueIndex = 2;
     [SerializeField] public InfoCategoryTextAssetDictionary countryInfo = new();
-    private readonly List<Country2> countries = new();
 
-    private readonly Dictionary<Country2, CountryRenderer> instantiatedCountries = new();
+    [SerializeField] private Material defaultSplineMaterial;
+    private const float defaultSplineThickness = 0.01f;
+    
+    private readonly List<Country2> countries = new();
+    private readonly List<CountryRenderer> instantiatedCountries = new();
+
+    private CountryRenderer pivotCountryRenderer => instantiatedCountries.FirstOrDefault(c => c.country.isPivot);
 
     void Start()
     {
@@ -74,18 +91,35 @@ public class MainManager : UnitySingleton<MainManager>
         return countries.FirstOrDefault(c => c.trackerTexture.name == imgName);
     }
 
-    public void RegisterCountryRenderer(CountryRenderer countryRenderer, Country2 country)
+    private readonly List<SplineConnection> countryConnections = new();
+
+    public void RegisterCountryRenderer(CountryRenderer countryRenderer)
     {
-        instantiatedCountries.Add(country, countryRenderer);
+        instantiatedCountries.Add(countryRenderer);
+        Debug.LogWarning($"Renderer for country {countryRenderer.country.name} was added!");
+        if (!countryRenderer.country.isPivot && pivotCountryRenderer != null)
+        {
+            // Draw spline connection
+            var countryConnection = gameObject.AddComponent<SplineConnection>();
+            countryConnection.fromTransform = countryRenderer.transform;
+            countryConnection.toTransform = pivotCountryRenderer.transform;
+            countryConnection.thickness = defaultSplineThickness;
+            countryConnection.splineMaterial = defaultSplineMaterial;
+            countryConnections.Add(countryConnection);
+        }
     }
-    
+
     public void DeregisterCountryRenderer(CountryRenderer countryRenderer)
     {
-        // TODO: Continue here
-        /*var countryKey = instantiatedCountries.FirstOrDefault(pair => pair.Value == countryRenderer);
+        instantiatedCountries.Remove(countryRenderer);
+        Debug.LogWarning($"Renderer for country {countryRenderer.country.name} was removed!");
         
-        instantiatedCountries.Remove(
-            );*/
+        var connectionsToRemove = countryConnections.Where(conn =>
+            conn.fromTransform == countryRenderer.transform ||
+            conn.toTransform == countryRenderer.transform
+        ).ToList();
+        connectionsToRemove.ForEach(conn => countryConnections.Remove(conn));
+        connectionsToRemove.ForEach(Destroy);
     }
 
     void Update()

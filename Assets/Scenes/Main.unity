@@ -182,7 +182,6 @@ GameObject:
   - component: {fileID: 793123680}
   - component: {fileID: 793123683}
   - component: {fileID: 793123684}
-  - component: {fileID: 793123685}
   m_Layer: 0
   m_Name: XR Origin (XR Rig)
   m_TagString: Untagged
@@ -276,18 +275,9 @@ MonoBehaviour:
     m_values:
     - {fileID: 4900000, guid: 244bbeb8767a12e44bc2fa1e8d7dc62a, type: 3}
     - {fileID: 4900000, guid: 9e430fcd0ca9d8843843b07bc28c1bc8, type: 3}
---- !u!114 &793123685
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 793123679}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6bcd071e2174c4f83ab48247d10003a9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  defaultSplineMaterial: {fileID: 2100000, guid: d9bc77bd887bd6849ae38e61450f2f93,
+    type: 2}
+  defaultSplineThickness: 0.5
 --- !u!1 &968501818
 GameObject:
   m_ObjectHideFlags: 0
