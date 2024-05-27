@@ -8,18 +8,10 @@ public class SplineConnection : MonoBehaviour
     public Transform fromTransform;
     public Transform toTransform;
     public Material splineMaterial;
-    /*{
-        private get => meshRenderer.material;
-        set => meshRenderer.material = value;
-    }*/
-
     public float splineThickness = 0.03f;
-    /*{
-        private get => splineExtrude.Radius;
-        set => splineExtrude.Radius = value;
-    }*/
-
-    private const float MidPointHeight = 0.02f;
+    
+    private const float MidPointHeight = 0.04f;
+    private const int SegmentsPerUnit = 24;
 
     private SplineContainer splineContainer;
     private MeshRenderer meshRenderer;
@@ -49,6 +41,7 @@ public class SplineConnection : MonoBehaviour
             new BezierKnot(),
             new BezierKnot()
         });
+        connectingSpline.SetTangentMode(TangentMode.AutoSmooth);
         
         this.splineMaterial = splineMaterial;
         this.splineThickness = splineThickness;
@@ -61,6 +54,7 @@ public class SplineConnection : MonoBehaviour
 
         splineExtrude = gameObject.AddComponent<SplineExtrude>();
         splineExtrude.Radius = this.splineThickness;
+        splineExtrude.SegmentsPerUnit = SegmentsPerUnit;
         splineExtrude.Container = splineContainer;
         splineExtrude.RebuildOnSplineChange = true;
             
