@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 198.4 198.4">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #000;
+      }
+
+      .cls-1, .cls-2 {
+        stroke-width: 0px;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+    </style>
+  </defs>
+  <g id="Ebene_1" data-name="Ebene 1" shape-rendering="crispEdges">
+    <rect class="cls-1" y="0" width="198.4" height="198.4"/>
+    <rect class="cls-2" x="33.1" y="33.1" width="33.1" height="33.1"/>
+    <rect class="cls-2" x="99.2" y="33.1" width="49.6" height="33.1"/>
+    <rect class="cls-2" x="132.3" y="33.1" width="33.1" height="33.1"/>
+    <rect class="cls-2" x="132.3" y="33.1" width="33.1" height="49.6"/>
+    <rect class="cls-2" x="66.1" y="66.1" width="33.1" height="33.1"/>
+    <rect class="cls-2" x="132.3" y="66.1" width="33.1" height="33.1"/>
+    <rect class="cls-2" x="132.3" y="66.1" width="33.1" height="49.6"/>
+    <rect class="cls-2" x="99.2" y="99.2" width="49.6" height="33.1"/>
+    <rect class="cls-2" x="99.2" y="99.2" width="33.1" height="49.6"/>
+    <rect class="cls-2" x="132.3" y="99.2" width="33.1" height="33.1"/>
+    <rect class="cls-2" x="99.2" y="132.3" width="33.1" height="33.1"/>
+  </g>
+</svg>

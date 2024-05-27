@@ -12,6 +12,9 @@ public class SplineConnection : MonoBehaviour
     
     private const float MidPointHeight = 0.04f;
     private const int SegmentsPerUnit = 24;
+    public static float MinSplineThickness = 0.005f;
+    public static float MaxSplineThickness = 0.05f;
+    //private const float defaultSplineThickness = 0.01f;
 
     private SplineContainer splineContainer;
     private MeshRenderer meshRenderer;

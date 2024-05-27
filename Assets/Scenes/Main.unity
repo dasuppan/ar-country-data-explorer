@@ -273,6 +273,7 @@ MonoBehaviour:
   infoCategoryDefinitions:
   - {fileID: 11400000, guid: 04be3a6d461b03c47ae421a36223f10d, type: 2}
   - {fileID: 11400000, guid: 1a32e835b5b5f9a489131ecbf555cb87, type: 2}
+  activeInfoCategories: 0000000001000000
 --- !u!1 &968501818
 GameObject:
   m_ObjectHideFlags: 0
