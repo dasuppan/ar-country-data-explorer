@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public enum InfoCategory
 {
@@ -22,5 +23,6 @@ namespace ScriptableObjects.Countries
         public CategoryType type;
         public Material splineMaterial;
         public TextAsset csvFile;
+        public List<InfoCategory> connectionThicknessRelativeTo;
     }
 }

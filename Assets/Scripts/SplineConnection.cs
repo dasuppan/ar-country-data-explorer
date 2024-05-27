@@ -13,13 +13,13 @@ public class SplineConnection : MonoBehaviour
         set => meshRenderer.material = value;
     }*/
 
-    public float splineThickness;
+    public float splineThickness = 0.03f;
     /*{
         private get => splineExtrude.Radius;
         set => splineExtrude.Radius = value;
     }*/
 
-    private const float MidPointHeight = 0.05f;
+    private const float MidPointHeight = 0.02f;
 
     private SplineContainer splineContainer;
     private MeshRenderer meshRenderer;

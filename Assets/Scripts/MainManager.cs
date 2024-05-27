@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
@@ -12,12 +13,15 @@ public class MainManager : UnitySingleton<MainManager>
     public List<CountryDefinitionSO> countryDefinitions = new();
     [SerializeField] public List<InfoCategoryDefinitionSO> infoCategoryDefinitions = new();
 
-    private const float defaultSplineThickness = 0.01f;
+    private const float minSplineThickness = 0.005f;
+    private const float maxSplineThickness = 0.05f;
+    //private const float defaultSplineThickness = 0.01f;
 
     private readonly List<Country> countries = new();
     private readonly List<CountryRenderer> countryRenderers = new();
     private readonly List<SplineConnection> countryConnections = new();
     private readonly List<InfoCategory> activeInfoCategories = new();
+    private readonly Dictionary<InfoCategory, double> infoCategoryMaxValues = new();
 
     //private ARTrackedImageManager trackedImageManager;
 
@@ -47,12 +51,15 @@ public class MainManager : UnitySingleton<MainManager>
         // Parse CSV data
         foreach (var def in infoCategoryDefinitions)
         {
+            infoCategoryMaxValues[def.category] = 0;
+
             string[] data = def.csvFile.text.Split(new[] { ";", "\n" }, StringSplitOptions.None);
             int tableRowCount = data.Length / colCount - 1;
             for (int i = 0; i < tableRowCount; i++)
             {
                 string countryName = data[colCount * (i + 1) + countryNameIndex];
                 double countryValue = double.Parse(data[colCount * (i + 1) + countryValueIndex]);
+                infoCategoryMaxValues[def.category] = Math.Max(countryValue, infoCategoryMaxValues[def.category]);
                 Country country = countries.FirstOrDefault(c => c.name == countryName);
                 if (country == null) continue;
                 country.data[def.category] = countryValue;
@@ -67,46 +74,6 @@ public class MainManager : UnitySingleton<MainManager>
         Debug.LogWarning("MainManager initialized.");
     }
 
-    // Tracked Image Manager Callbacks init
-
-    /*protected override void Awake()
-    {
-        trackedImageManager = GetComponent<ARTrackedImageManager>();
-    }
-
-    void OnEnable() => trackedImageManager.trackedImagesChanged += OnImagesChanged;
-
-    void OnDisable() => trackedImageManager.trackedImagesChanged -= OnImagesChanged;
-
-    void OnImagesChanged(ARTrackedImagesChangedEventArgs eventArgs)
-    {
-        foreach (var image in eventArgs.added)
-        {
-            var associatedCountry = GetCountryByReferenceImageName(image.referenceImage.name);
-            Debug.LogWarning($"Tracker for {associatedCountry.name} was added.");
-            // Handle added event
-        }
-
-        foreach (var image in eventArgs.updated)
-        {
-            var associatedCountry = GetCountryByReferenceImageName(image.referenceImage.name);
-            Debug.LogWarning(
-                $"Tracker for {associatedCountry.name} was updated. Tracking state: {image.trackingState}");
-            if (image.trackingState == TrackingState.Limited)
-            {
-                Destroy(image.gameObject);
-            }
-            // Handle updated event
-        }
-
-        foreach (var image in eventArgs.removed)
-        {
-            var associatedCountry = GetCountryByReferenceImageName(image.referenceImage.name);
-            Debug.LogWarning($"Tracker for {associatedCountry.name} was removed.");
-            // Handle removed event
-        }
-    }*/
-
     public Country GetCountryByReferenceImageName(string imgName)
     {
         return countries.FirstOrDefault(c => c.trackerTexture.name == imgName);
@@ -115,8 +82,9 @@ public class MainManager : UnitySingleton<MainManager>
     public void RegisterCountryRenderer(CountryRenderer countryRenderer)
     {
         countryRenderers.Add(countryRenderer);
-        Debug.LogWarning($"Renderer for country {countryRenderer.country.name} was added!");
-        if (!countryRenderer.country.isPivot && pivotCountryRenderer != null)
+        var country = countryRenderer.country;
+        Debug.LogWarning($"Renderer for country {country.name} was added!");
+        if (!country.isPivot && pivotCountryRenderer != null)
         {
             // Draw spline connection(s)
             foreach (var iCat in activeInfoCategories)
@@ -128,7 +96,35 @@ public class MainManager : UnitySingleton<MainManager>
                     continue;
                 }
 
-                var conn = gameObject.AddComponent<SplineConnection>();
+                if (!country.data.ContainsKey(iCat))
+                {
+                    Debug.LogWarning($"Country has no data for category {iCat}! Skipping spline connection...");
+                    continue;
+                }
+
+                var countryConnectionGo =
+                    new GameObject($"Country Connection - {iCatDef.categoryName} - {country.name}");
+                countryConnectionGo.transform.SetParent(transform);
+
+                var conn = countryConnectionGo.AddComponent<SplineConnection>();
+
+                // Spline thickness calculation
+                var relCategories = iCatDef.connectionThicknessRelativeTo.Intersect(activeInfoCategories);
+                /*var relValues = countries.SelectMany( // For each country
+                    c => c.data // Select all data arrays
+                        .Where(c => relCategories.Contains(c.Key)) // that hold data for a relevant infoCat
+                        .Select(pair => pair.Value) // and get the values from those data arrays
+                ).ToList();*/
+                var relMaxValues = infoCategoryMaxValues
+                    .Where(pair => relCategories.Contains(pair.Key))
+                    .Select(pair => pair.Value);
+                var maxValue = relMaxValues.Max();
+                var splineThickness = Mathf.Lerp(
+                    minSplineThickness,
+                    maxSplineThickness,
+                    (float)(countryRenderer.country.data[iCat] / maxValue)
+                );
+
                 conn.Init(
                     iCatDef.type == CategoryType.TO_PIVOT
                         ? countryRenderer.transform
@@ -137,7 +133,7 @@ public class MainManager : UnitySingleton<MainManager>
                         ? pivotCountryRenderer.transform
                         : countryRenderer.transform,
                     iCatDef.splineMaterial,
-                    defaultSplineThickness
+                    splineThickness
                 );
                 countryConnections.Add(conn);
             }
@@ -154,7 +150,7 @@ public class MainManager : UnitySingleton<MainManager>
             conn.toTransform == countryRenderer.transform
         ).ToList();
         connectionsToRemove.ForEach(conn => countryConnections.Remove(conn));
-        connectionsToRemove.ForEach(Destroy);
+        connectionsToRemove.ForEach(conn => Destroy(conn.gameObject));
     }
 
     void Update()
