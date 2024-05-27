@@ -270,14 +270,9 @@ MonoBehaviour:
   countryDefinitions:
   - {fileID: 11400000, guid: 2bed0c6445b20e5469dc95467ed47ac8, type: 2}
   - {fileID: 11400000, guid: dba5712a4fda8c24793ab8d659241be1, type: 2}
-  countryInfo:
-    m_keys: 0000000001000000
-    m_values:
-    - {fileID: 4900000, guid: 244bbeb8767a12e44bc2fa1e8d7dc62a, type: 3}
-    - {fileID: 4900000, guid: 9e430fcd0ca9d8843843b07bc28c1bc8, type: 3}
-  defaultSplineMaterial: {fileID: 2100000, guid: d9bc77bd887bd6849ae38e61450f2f93,
-    type: 2}
-  defaultSplineThickness: 0.5
+  infoCategoryDefinitions:
+  - {fileID: 11400000, guid: 04be3a6d461b03c47ae421a36223f10d, type: 2}
+  - {fileID: 11400000, guid: 1a32e835b5b5f9a489131ecbf555cb87, type: 2}
 --- !u!1 &968501818
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Splines;
@@ -9,21 +8,39 @@ public class SplineConnection : MonoBehaviour
     public Transform fromTransform;
     public Transform toTransform;
     public Material splineMaterial;
-    public float thickness = 1.0f;
-    
-    private const float MidPointHeight = 0.2f;
-    
-    private SplineContainer splineContainer;
-    private SplineExtrude splineExtrude;
-    private MeshFilter meshFilter;
-    private MeshRenderer meshRenderer;
-    private Spline connectingSpline;
-    
+    /*{
+        private get => meshRenderer.material;
+        set => meshRenderer.material = value;
+    }*/
 
-    private void Start()
+    public float splineThickness;
+    /*{
+        private get => splineExtrude.Radius;
+        set => splineExtrude.Radius = value;
+    }*/
+
+    private const float MidPointHeight = 0.05f;
+
+    private SplineContainer splineContainer;
+    private MeshRenderer meshRenderer;
+    private MeshFilter meshFilter;
+    private SplineExtrude splineExtrude;
+    
+    private Spline connectingSpline;
+
+    public void Init(Transform fromTransform, Transform toTransform, Material splineMaterial, float splineThickness)
     {
-        splineContainer = gameObject.AddComponent<SplineContainer>();
+        if (initCompleted)
+        {
+            Debug.LogWarning("Already initialized. Aborting...");
+            return;
+        }
         
+        this.toTransform = toTransform;
+        this.fromTransform = fromTransform;
+        
+        splineContainer = gameObject.AddComponent<SplineContainer>();
+
         // Spline init
         connectingSpline = splineContainer.AddSpline();
         connectingSpline.AddRange(new[]
@@ -33,23 +50,29 @@ public class SplineConnection : MonoBehaviour
             new BezierKnot()
         });
         
+        this.splineMaterial = splineMaterial;
+        this.splineThickness = splineThickness;
+
         // Rendering init
         meshRenderer = gameObject.AddComponent<MeshRenderer>();
-        meshRenderer.material = splineMaterial;
+        meshRenderer.material = this.splineMaterial;
         meshFilter = gameObject.AddComponent<MeshFilter>();
         meshFilter.sharedMesh = new Mesh();
-        
+
         splineExtrude = gameObject.AddComponent<SplineExtrude>();
+        splineExtrude.Radius = this.splineThickness;
         splineExtrude.Container = splineContainer;
-        splineExtrude.Radius = thickness;
         splineExtrude.RebuildOnSplineChange = true;
+            
+        initCompleted = true;
     }
+
+    private bool initCompleted;
 
     private void Update()
     {
-        if (toTransform == null || fromTransform == null) return;
-        splineExtrude.Radius = thickness;
-        
+        if (!initCompleted) return;
+
         // We assume a three knotted spline
         var knot0 = connectingSpline.Knots.ToArray()[0];
         var knot1 = connectingSpline.Knots.ToArray()[1];
@@ -60,7 +83,7 @@ public class SplineConnection : MonoBehaviour
         knot1.Position =
             transform.InverseTransformPoint((fromTransform.position +
                                              (toTransform.position - fromTransform.position) / 2));
-        knot1.Position.y = MidPointHeight;
+        knot1.Position.y = MidPointHeight; // TODO: Relative to both transforms?
         connectingSpline.SetKnot(1, knot1);
         knot2.Position = transform.InverseTransformPoint(toTransform.position);
         connectingSpline.SetKnot(2, knot2);

@@ -3,12 +3,14 @@ using UnityEngine.XR.ARFoundation;
 
 public class CountryRenderer : MonoBehaviour
 {
-    public Country2 country { get; private set; }
+    private ARTrackedImage trackedImage;
+    public Country country { get; private set; }
 
     void Start()
     {
+        trackedImage = GetComponent<ARTrackedImage>();
         country = MainManager.Instance.GetCountryByReferenceImageName(
-            GetComponent<ARTrackedImage>().referenceImage.name
+            trackedImage.referenceImage.name
         );
         if (country != null)
         {
@@ -35,5 +37,7 @@ public class CountryRenderer : MonoBehaviour
     {
         //Debug.Log("Scoobidoobidoo.");
         transform.LookAt(Camera.main.transform, Vector3.up);
+        // TODO: Continue here: trackedImage.trackingState
+        
     }
 }
