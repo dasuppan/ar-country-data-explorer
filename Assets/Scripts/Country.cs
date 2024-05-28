@@ -15,5 +15,5 @@ public class Country
     public readonly Sprite flagSprite;
     public readonly Texture2D trackerTexture;
     public readonly bool isPivot;
-    public readonly Dictionary<InfoCategory, double?> data = new();
+    public readonly Dictionary<Country, Dictionary<InfoCategory, double?>> data = new();
 }

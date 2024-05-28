@@ -12,11 +12,11 @@ public class MainManager : UnitySingleton<MainManager>
     [SerializeField] private CountryDefinitionSO pivotCountryDefinition;
     [SerializeField] private List<CountryDefinitionSO> countryDefinitions = new();
     [SerializeField] private List<InfoCategoryDefinitionSO> infoCategoryDefinitions = new();
-    [SerializeField] private List<InfoCategory> activeInfoCategories = new();
+    [SerializeField] public List<InfoCategory> activeInfoCategories = new();
 
     private readonly List<Country> countries = new();
-    private readonly List<CountryRenderer> countryRenderers = new();
-    private readonly List<SplineConnection> countryConnections = new();
+    public readonly List<CountryRenderer> countryRenderers = new();
+    //private readonly List<SplineConnection> countryConnections = new();
     private readonly Dictionary<InfoCategory, double> infoCategoryMaxValues = new();
 
     //private ARTrackedImageManager trackedImageManager;

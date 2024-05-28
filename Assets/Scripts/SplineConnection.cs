@@ -1,39 +1,42 @@
 ﻿using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Splines;
 
 public class SplineConnection : MonoBehaviour
 {
-    public Transform fromTransform;
-    public Transform toTransform;
+    public CountryRenderer targetCountryRenderer;
+    private Transform targetTransform => targetCountryRenderer == null ? null : targetCountryRenderer.transform;
     public Material splineMaterial;
     public float splineThickness = 0.03f;
-    
+
     private const float MidPointHeight = 0.04f;
     private const int SegmentsPerUnit = 24;
     public static float MinSplineThickness = 0.005f;
     public static float MaxSplineThickness = 0.05f;
+
+    
     //private const float defaultSplineThickness = 0.01f;
 
     private SplineContainer splineContainer;
     private MeshRenderer meshRenderer;
     private MeshFilter meshFilter;
     private SplineExtrude splineExtrude;
-    
+
     private Spline connectingSpline;
 
-    public void Init(Transform fromTransform, Transform toTransform, Material splineMaterial, float splineThickness)
+    public void Init(CountryRenderer targetCountryRenderer, Material splineMaterial, float splineThickness)
     {
         if (initCompleted)
         {
             Debug.LogWarning("Already initialized. Aborting...");
             return;
         }
-        
-        this.toTransform = toTransform;
-        this.fromTransform = fromTransform;
-        
+
+        this.targetCountryRenderer = targetCountryRenderer;
+        this.infoCategory = infoCategory;
+
         splineContainer = gameObject.AddComponent<SplineContainer>();
 
         // Spline init
@@ -45,7 +48,7 @@ public class SplineConnection : MonoBehaviour
             new BezierKnot()
         });
         connectingSpline.SetTangentMode(TangentMode.AutoSmooth);
-        
+
         this.splineMaterial = splineMaterial;
         this.splineThickness = splineThickness;
 
@@ -60,7 +63,7 @@ public class SplineConnection : MonoBehaviour
         splineExtrude.SegmentsPerUnit = SegmentsPerUnit;
         splineExtrude.Container = splineContainer;
         splineExtrude.RebuildOnSplineChange = true;
-            
+
         initCompleted = true;
     }
 
@@ -75,14 +78,23 @@ public class SplineConnection : MonoBehaviour
         var knot1 = connectingSpline.Knots.ToArray()[1];
         var knot2 = connectingSpline.Knots.ToArray()[2];
 
-        knot0.Position = transform.InverseTransformPoint(fromTransform.position);
+        knot0.Position = transform.InverseTransformPoint(transform.position); // TODO: Redundant
         connectingSpline.SetKnot(0, knot0);
         knot1.Position =
-            transform.InverseTransformPoint((fromTransform.position +
-                                             (toTransform.position - fromTransform.position) / 2));
+            transform.InverseTransformPoint((transform.position +
+                                             (targetTransform.position - transform.position) / 2));
         knot1.Position.y = MidPointHeight; // TODO: Relative to both transforms?
         connectingSpline.SetKnot(1, knot1);
-        knot2.Position = transform.InverseTransformPoint(toTransform.position);
+        knot2.Position = transform.InverseTransformPoint(targetTransform.position);
         connectingSpline.SetKnot(2, knot2);
+    }
+
+    public void RemoveSelf()
+    {
+        if (targetCountryRenderer != null)
+        {
+            targetCountryRenderer.RemoveIncomingConnection(this);
+        }
+        Destroy(gameObject);
     }
 }
