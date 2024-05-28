@@ -17,8 +17,10 @@ public class CountryRenderer : MonoBehaviour
         set => Dirty = value;
     }
 
-    private readonly Dictionary<InfoCategory, SplineConnection> incomingConnections = new();
-    private readonly Dictionary<InfoCategory, SplineConnection> outgoingConnections = new();
+    private readonly Dictionary<Country, Dictionary<InfoCategory, SplineConnection>> incomingConnections = new();
+    private readonly Dictionary<Country, Dictionary<InfoCategory, SplineConnection>> outgoingConnections = new();
+    /*private readonly Dictionary<InfoCategory, SplineConnection> incomingConnections = new();
+    private readonly Dictionary<InfoCategory, SplineConnection> outgoingConnections = new();*/
 
     public void RemoveIncomingConnection(SplineConnection connection)
     {
@@ -127,6 +129,9 @@ public class CountryRenderer : MonoBehaviour
     {
     }
 
+    private List<InfoCategory> cachedInfoCategories; // TODO: Need initial fill
+    private List<CountryRenderer> cachedCountryRenderers; // TODO: Need initial fill
+
     // Update is called once per frame
     void Update()
     {
@@ -135,11 +140,20 @@ public class CountryRenderer : MonoBehaviour
         // TODO: Continue here: trackedImage.trackingState
         if (Dirty)
         {
-            var activeInfoCategories = MainManager.Instance.activeInfoCategories;
-            var activeCountryRenderers = MainManager.Instance.countryRenderers;
+            var currentActiveInfoCategories = MainManager.Instance.activeInfoCategories;
+            var currentActiveCountries = MainManager.Instance.GetActiveCountries();
+            var removedInfoCategories = cachedInfoCategories.Except(currentActiveInfoCategories);
+            var removedCountries = cachedCountryRenderers.Select(cRend => cRend.country).Except(currentActiveCountries);
+            var addedInfoCategories = currentActiveInfoCategories.Except(cachedInfoCategories);
+            var addedCountries = currentActiveCountries.Except(cachedCountryRenderers.Select(cRend => cRend.country));
+            
+            
+            //var activeInfoCategories = MainManager.Instance.activeInfoCategories;
+            //var activeCountries = MainManager.Instance.countryRenderers.Select(cRend => cRend.country);
 
+            // CONNECTION REMOVAL
             // Check if connection removal needed based on removed infoCategories
-            var removedInfoCategories = outgoingConnections.Keys.Except(activeInfoCategories);
+            var removedInfoCategories = outgoingConnections.Select(pair => pair.Value); //.Keys.Except(activeInfoCategories);
             var toRemoveOutgoingConnections1 = removedInfoCategories.Select(iCat => outgoingConnections[iCat]);
             /*var toRemoveOutgoingConnections1 = outgoingConnections
                 .Where(conn => !activeInfoCategories.Contains(conn.Key))
@@ -148,12 +162,12 @@ public class CountryRenderer : MonoBehaviour
             // Check if connection removal needed based on removed renderers
             var removedCountryRenderers = outgoingConnections.Values
                 .Select(cRend => cRend.targetCountryRenderer)
-                .Except(activeCountryRenderers)
+                .Except(activeCountries)
                 .ToList();
             var toRemoveOutgoingConnections2 = outgoingConnections
                 .Where(pair => removedCountryRenderers.Contains(pair.Value.targetCountryRenderer))
                 .Select(pair => pair.Value);
-            
+
             /*var toRemoveOutgoingConnections2 = outgoingConnections
                 .Where(conn => !activeCountryRenderers.Contains(conn.Value.targetCountryRenderer))
                 .Select(pair => pair.Value);*/
@@ -165,12 +179,41 @@ public class CountryRenderer : MonoBehaviour
             // Remove connections
             toRemoveOutgoingConnections.ForEach(conn => outgoingConnections.RemoveByValue(conn));
 
+            // CONNECTION ADDING
             // Check if connection adding is needed based on added infoCategories
-            var currentOutgoingConnectionCategories = outgoingConnections.Select(conn => conn.Key).ToList();
-            var toAddInfoCategoryConnections = activeInfoCategories.Except(currentOutgoingConnectionCategories);
+            var addedInfoCategories = cachedInfoCategories.Except(outgoingConnections.Keys);
+
+            foreach (var cRenderer in activeCountries)
+            {
+                var rendererCountry = cRenderer.country;
+                foreach (var iCat in addedInfoCategories)
+                {
+                    var catData = country.data.ContainsKey(rendererCountry) // Does our country have data for the added country?
+                        ? country.data[rendererCountry].ContainsKey(iCat) // Does our country have the InfoCategory data for the added country?
+                            ? country.data[rendererCountry][iCat]
+                            : null
+                        : null;
+                    if (catData == null) continue;
+                    CreateNewOutgoingConnection(iCat, cRenderer, catData);
+                }
+            }
+
+            var addedCountryRenderers = activeCountries
+                .Except(outgoingConnections.Values.Select(conn => conn.targetCountryRenderer));
+
+            // Check if our country has data for new info category and existing renderers
+
 
             // Check if connection adding is needed based on added renderers
             // TODO: So help me jesus christ the saviour, continue here!
+        }
+    }
+
+    private void CreateNewOutgoingConnection(InfoCategory iCat, CountryRenderer cRenderer, double value)
+    {
+        if (outgoingConnections.ContainsKey(iCat))
+        {
+            Debug.LogError($"A Category {iCat}");
         }
     }
 }

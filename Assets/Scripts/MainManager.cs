@@ -16,6 +16,7 @@ public class MainManager : UnitySingleton<MainManager>
 
     private readonly List<Country> countries = new();
     public readonly List<CountryRenderer> countryRenderers = new();
+    public List<Country> GetActiveCountries() => countryRenderers.Select(cRend => cRend.country).ToList();
     //private readonly List<SplineConnection> countryConnections = new();
     private readonly Dictionary<InfoCategory, double> infoCategoryMaxValues = new();
 
