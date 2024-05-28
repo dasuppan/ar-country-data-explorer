@@ -1,35 +1,29 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.XR.ARFoundation;
-using UnityEngine.XR.ARSubsystems;
 
 public class MainManager : UnitySingleton<MainManager>
 {
-    [SerializeField] private CountryDefinitionSO pivotCountryDefinition;
     [SerializeField] private List<CountryDefinitionSO> countryDefinitions = new();
     [SerializeField] private List<InfoCategoryDefinitionSO> infoCategoryDefinitions = new();
     [SerializeField] public List<InfoCategory> activeInfoCategories = new();
 
     private readonly List<Country> countries = new();
+
+    public Country GetCountryByName(string cName)
+    {
+        return countries.FirstOrDefault(c => c.countryName == cName);
+    }
+    
     public readonly List<CountryRenderer> countryRenderers = new();
-    public List<Country> GetActiveCountries() => countryRenderers.Select(cRend => cRend.country).ToList();
+
     //private readonly List<SplineConnection> countryConnections = new();
     private readonly Dictionary<InfoCategory, double> infoCategoryMaxValues = new();
 
     //private ARTrackedImageManager trackedImageManager;
 
     private CountryRenderer pivotCountryRenderer => countryRenderers.FirstOrDefault(c => c.country.isPivot);
-
-    // CSV Constants
-    // Structure: AT, Austria, Value
-    private const int colCount = 3;
-    private const int countryCodeIndex = 0;
-    private const int countryNameIndex = 1;
-    private const int countryValueIndex = 2;
 
     void Start()
     {
@@ -39,8 +33,7 @@ public class MainManager : UnitySingleton<MainManager>
                 cDef => new Country(
                     cDef.countryName,
                     cDef.flagSprite,
-                    cDef.trackerTexture,
-                    cDef == pivotCountryDefinition
+                    cDef.trackerTexture
                 )
             )
         );
@@ -48,18 +41,12 @@ public class MainManager : UnitySingleton<MainManager>
         // Parse CSV data
         foreach (var def in infoCategoryDefinitions)
         {
-            infoCategoryMaxValues[def.category] = 0;
-
-            string[] data = def.csvFile.text.Split(new[] { ";", "\n" }, StringSplitOptions.None);
-            int tableRowCount = data.Length / colCount - 1;
-            for (int i = 0; i < tableRowCount; i++)
+            
+            foreach (var fileConfig in def.fileConfigs)
             {
-                string countryName = data[colCount * (i + 1) + countryNameIndex];
-                double countryValue = double.Parse(data[colCount * (i + 1) + countryValueIndex]);
-                infoCategoryMaxValues[def.category] = Math.Max(countryValue, infoCategoryMaxValues[def.category]);
-                Country country = countries.FirstOrDefault(c => c.name == countryName);
-                if (country == null) continue;
-                country.data[def.category] = countryValue;
+                // TODO: Respect max value set by previously processed file configs
+                DataFileConfigSO.ProcessFile(fileConfig, countries, fileConfig.country, def.category, out var relevantCountriesMaxValue);
+                infoCategoryMaxValues[def.category] = relevantCountriesMaxValue;
             }
         }
 
@@ -90,25 +77,18 @@ public class MainManager : UnitySingleton<MainManager>
     {
         countryRenderers.Add(countryRenderer);
         var country = countryRenderer.country;
-        Debug.LogWarning($"Renderer for country {country.name} was added!");
-        /*TODO OnCountryRenderersUpdated();*/
+        Debug.LogWarning($"Renderer for country {country.countryName} was added!");
+        countryRenderers.ForEach(cRend => cRend.ForceEvaluationOnNextFrame());
     }
 
     public void DeregisterCountryRenderer(CountryRenderer countryRenderer)
     {
         countryRenderers.Remove(countryRenderer);
-        Debug.LogWarning($"Renderer for country {countryRenderer.country.name} was removed!");
-
-        var connectionsToRemove = countryConnections.Where(conn =>
-            conn.fromTransform == countryRenderer.transform ||
-            conn.toTransform == countryRenderer.transform
-        ).ToList();
-        connectionsToRemove.ForEach(conn => countryConnections.Remove(conn));
-        connectionsToRemove.ForEach(conn => Destroy(conn.gameObject));
-        // TODO: Update to use UpdateCountryRelations
+        Debug.LogWarning($"Renderer for country {countryRenderer.country.countryName} was removed!");
+        countryRenderers.ForEach(cRend => cRend.ForceEvaluationOnNextFrame());
     }
 
-    private void OnCountryRenderersUpdated(List<CountryRenderer> updatedCountryRenderers)
+    /*private void OnCountryRenderersUpdated(List<CountryRenderer> updatedCountryRenderers)
     {
         // Check for relations to be removed
         // TODO
@@ -129,7 +109,7 @@ public class MainManager : UnitySingleton<MainManager>
             {
                 Destroy(connections[iCat].gameObject);
                 connections.Remove(iCat); // TODO: COntinue here, uncomment
-            }*/
+            }#1#
         }
 
         // if (pivotCountryRenderer == null) return;
@@ -154,5 +134,5 @@ public class MainManager : UnitySingleton<MainManager>
 
     void Update()
     {
-    }
+    }*/
 }

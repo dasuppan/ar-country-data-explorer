@@ -3,15 +3,14 @@ using UnityEngine;
 
 public class Country
 {
-    public Country(string name, Sprite flagSprite, Texture2D trackerTexture, bool isPivot = false)
+    public Country(string countryName, Sprite flagSprite, Texture2D trackerTexture)
     {
-        this.name = name;
+        this.countryName = countryName;
         this.flagSprite = flagSprite;
         this.trackerTexture = trackerTexture;
-        this.isPivot = isPivot;
     }
 
-    public readonly string name;
+    public readonly string countryName;
     public readonly Sprite flagSprite;
     public readonly Texture2D trackerTexture;
     public readonly bool isPivot;
@@ -19,10 +18,10 @@ public class Country
 
     public double? GetDataForCountryInfoCategory(Country country, InfoCategory infoCategory)
     {
-        return country.data.ContainsKey(country) // Does this country have data for the param country?
-            ? country.data[country]
+        return data.ContainsKey(country) // Does this country have data for the param country?
+            ? data[country]
                 .ContainsKey(infoCategory) // Does this country have the InfoCategory data for the param country?
-                ? country.data[country][infoCategory]
+                ? data[country][infoCategory]
                 : null
             : null;
     }

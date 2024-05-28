@@ -7,12 +7,6 @@ public enum InfoCategory
     EXPORT_FROM_AUSTRIA
 }
 
-public enum CategoryType
-{
-    TO_PIVOT,
-    FROM_PIVOT
-}
-
 namespace ScriptableObjects.Countries
 {
     [CreateAssetMenu(fileName = "InfoCategoryDefinition", menuName = "ScriptableObjects/InfoCategoryDefinition", order = 2)]
@@ -20,9 +14,8 @@ namespace ScriptableObjects.Countries
     {
         public string categoryName;
         public InfoCategory category;
-        public CategoryType type;
         public Material splineMaterial;
-        public TextAsset csvFile;
+        public List<DataFileConfigSO> fileConfigs;
         public List<InfoCategory> connectionThicknessRelativeTo;
     }
 }

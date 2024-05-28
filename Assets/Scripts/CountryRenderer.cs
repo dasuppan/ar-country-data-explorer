@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ScriptableObjects.Countries;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.XR.ARFoundation;
-using Utils;
 
 public class CountryRenderer : MonoBehaviour
 {
-    private ARTrackedImage trackedImage;
+    //private ARTrackedImage trackedImage;
     public Country country { get; private set; }
+
+    [SerializeField] private CountryDefinitionSO predefinedCountry; 
 
     public bool dirty
     {
@@ -18,6 +19,7 @@ public class CountryRenderer : MonoBehaviour
     }
 
     private readonly List<SplineConnection> incomingConnections = new();
+
     private readonly List<SplineConnection> outgoingConnections = new();
     /*private readonly Dictionary<InfoCategory, SplineConnection> incomingConnections = new();
     private readonly Dictionary<InfoCategory, SplineConnection> outgoingConnections = new();*/
@@ -27,26 +29,40 @@ public class CountryRenderer : MonoBehaviour
         return incomingConnections.Remove(connection);
     }
 
+    public void AddIncomingConnection(SplineConnection connection)
+    {
+        incomingConnections.Add(connection);
+    }
+
     void Start()
     {
-        trackedImage = GetComponent<ARTrackedImage>();
-        country = MainManager.Instance.GetCountryByReferenceImageName(
-            trackedImage.referenceImage.name
-        );
+        if (predefinedCountry != null)
+        {
+            Debug.LogWarning(
+                "$Country Renderer was instantiated with predefined country, skipping reference image comparison...");
+            country = MainManager.Instance.GetCountryByName(predefinedCountry.name);
+        }
+        else
+        {
+            var trackedImage = GetComponent<ARTrackedImage>();
+            country = MainManager.Instance.GetCountryByReferenceImageName(
+                trackedImage.referenceImage.name
+            );
+        }
+
         if (country != null)
         {
             GetComponent<SpriteRenderer>().sprite = country.flagSprite;
-            Debug.LogWarning($"Adding country {country.name}");
+            Debug.LogWarning($"Adding country {country.countryName}");
             Debug.LogWarning($"Is country pivot? {country.isPivot}");
-            Debug.LogWarning($"Country {country.name} has {country.data.Count} data points.");
+            Debug.LogWarning($"Country {country.countryName} has {country.data.Count} data points.");
+            MainManager.Instance.RegisterCountryRenderer(this);
         }
         else
         {
             // TODO: Should never happen actually
-            Debug.LogWarning("Tracker is not a country.");
+            Debug.LogWarning("No country found for tracker. Renderer is idling...");
         }
-
-        /*MainManager.Instance.RegisterCountryRenderer(this);*/
     }
 
     /*private void OnDestroy()
@@ -54,21 +70,21 @@ public class CountryRenderer : MonoBehaviour
         MainManager.Instance.DeregisterCountryRenderer(this);
     }*/
 
-    [NonSerialized] public bool Dirty;
+    [NonSerialized] private bool Dirty;
 
-    public void OnCountryRendererRemoved(CountryRenderer countryRenderer)
+    public void ForceEvaluationOnNextFrame()
     {
+        Dirty = true;
     }
 
-    private List<InfoCategory> cachedInfoCategories; // TODO: Need initial fill
-    private List<CountryRenderer> cachedCountryRenderers; // TODO: Need initial fill
+    private readonly List<InfoCategory> cachedInfoCategories = new();
+    private readonly List<CountryRenderer> cachedCountryRenderers = new();
 
     // Update is called once per frame
     void Update()
     {
-        //Debug.Log("Scoobidoobidoo.");
         transform.LookAt(Camera.main.transform, Vector3.up);
-        // TODO: Continue here: trackedImage.trackingState
+        // TODO: Respect trackedImage.trackingState?
         if (Dirty)
         {
             var currentInfoCategories = MainManager.Instance.activeInfoCategories;
@@ -94,9 +110,11 @@ public class CountryRenderer : MonoBehaviour
             toRemoveOutgoingConnections.ForEach(conn => conn.RemoveSelf());
             // Remove connections from lists
             toRemoveOutgoingConnections.ForEach(conn => outgoingConnections.Remove(conn));
+            var removedConnectionsCount = toRemoveOutgoingConnections.Count;
 
             // CONNECTION EXISTENCE CHECK & ADDING
 
+            var addedConnectionsCount = 0;
             foreach (var cRenderer in currentCountryRenderers)
             {
                 foreach (var iCat in currentInfoCategories)
@@ -107,8 +125,21 @@ public class CountryRenderer : MonoBehaviour
                     if (catData == null) continue;
 
                     outgoingConnections.Add(CreateNewOutgoingConnection(iCat, cRenderer, (double)catData));
+                    addedConnectionsCount++;
                 }
             }
+
+            cachedInfoCategories.Clear();
+            cachedInfoCategories.AddRange(currentInfoCategories);
+            cachedCountryRenderers.Clear();
+            cachedCountryRenderers.AddRange(currentCountryRenderers);
+            
+            Debug.LogWarning(
+                $"Renderer Evaluation completed ({country.countryName}):" +
+                $"\nConnections added: {addedConnectionsCount}" +
+                $"\nConnections removed: {removedConnectionsCount}"
+            );
+            Dirty = false;
         }
     }
 
@@ -129,7 +160,7 @@ public class CountryRenderer : MonoBehaviour
         }
 
         var countryConnectionGo =
-            new GameObject($"{iCatDef.categoryName} - {cRenderer.country.name}");
+            new GameObject($"{iCatDef.categoryName} - {cRenderer.country.countryName}");
         countryConnectionGo.transform.SetParent(transform);
         var conn = countryConnectionGo.AddComponent<SplineConnection>();
 
@@ -140,7 +171,7 @@ public class CountryRenderer : MonoBehaviour
             SplineConnection.MaxSplineThickness,
             (float)(value / iCatMaxValue)
         );
-        
+
         // TODO: Respect incoming connections in spline curvature
 
         conn.Init(

@@ -1,7 +1,7 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.Splines;
 
 public class SplineConnection : MonoBehaviour
@@ -40,6 +40,7 @@ public class SplineConnection : MonoBehaviour
 
     public void Init(CountryRenderer targetCountryRenderer, InfoCategory infoCategory, Material splineMaterial, float splineThickness)
     {
+        transform.localPosition = Vector3.zero;
         if (initCompleted)
         {
             Debug.LogWarning("Already initialized. Aborting...");
@@ -50,6 +51,7 @@ public class SplineConnection : MonoBehaviour
         this.infoCategory = infoCategory;
 
         splineContainer = gameObject.AddComponent<SplineContainer>();
+        splineContainer.Splines = new List<Spline>();
 
         // Spline init
         connectingSpline = splineContainer.AddSpline();
@@ -75,6 +77,8 @@ public class SplineConnection : MonoBehaviour
         splineExtrude.SegmentsPerUnit = SegmentsPerUnit;
         splineExtrude.Container = splineContainer;
         splineExtrude.RebuildOnSplineChange = true;
+
+        targetCountryRenderer.AddIncomingConnection(this);
 
         initCompleted = true;
     }
