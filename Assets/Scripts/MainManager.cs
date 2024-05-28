@@ -17,8 +17,6 @@ public class MainManager : UnitySingleton<MainManager>
     }
     
     public readonly List<CountryRenderer> countryRenderers = new();
-
-    //private readonly List<SplineConnection> countryConnections = new();
     private readonly Dictionary<InfoCategory, double> infoCategoryMaxValues = new();
 
     //private ARTrackedImageManager trackedImageManager;
@@ -83,56 +81,9 @@ public class MainManager : UnitySingleton<MainManager>
 
     public void DeregisterCountryRenderer(CountryRenderer countryRenderer)
     {
+        // TODO: Call this method
         countryRenderers.Remove(countryRenderer);
         Debug.LogWarning($"Renderer for country {countryRenderer.country.countryName} was removed!");
         countryRenderers.ForEach(cRend => cRend.ForceEvaluationOnNextFrame());
     }
-
-    /*private void OnCountryRenderersUpdated(List<CountryRenderer> updatedCountryRenderers)
-    {
-        // Check for relations to be removed
-        // TODO
-        if (pivotCountryRenderer == null)
-        {
-            // TODO: Remove all relations, return afterwards -> nothing to add
-        }
-        else
-        {
-            /*var removedCountries = countryRenderers
-                .Where(rend => !updatedCountryRenderers.Contains(rend))
-                .Select(rend => rend.country);
-            var toRemoveRelations = countryRelations.Where(
-                rel => removedCountries
-                );
-
-            foreach (var country in removedCountries)
-            {
-                Destroy(connections[iCat].gameObject);
-                connections.Remove(iCat); // TODO: COntinue here, uncomment
-            }#1#
-        }
-
-        // if (pivotCountryRenderer == null) return;
-        // Check for relations to be added
-        foreach (var cRenderer in countryRenderers)
-        {
-            if (cRenderer == pivotCountryRenderer) continue;
-            var relation = countryRelations.FirstOrDefault(r => r.ConcernsCountry(cRenderer.country));
-            if (relation == null)
-            {
-                var relationGo =
-                    new GameObject($"Relation {cRenderer.country.name} - {pivotCountryRenderer.country.name}");
-                relationGo.transform.SetParent(transform);
-                relation = relationGo.AddComponent<CountryRelation>();
-                relation.DataCountryRenderer = cRenderer;
-                relation.PivotCountryRenderer = pivotCountryRenderer;
-                // TODO: Pass active info categories
-                countryRelations.Add(relation);
-            }
-        }
-    }
-
-    void Update()
-    {
-    }*/
 }

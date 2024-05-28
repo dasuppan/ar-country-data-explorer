@@ -86,10 +86,6 @@ public class DataFileConfigSO : ScriptableObject
                 Debug.LogError($"Mode ${fileConfig.interpretationMode} is currently not supported! Aborting...");
                 return;
             }
-
-            //infoCategoryMaxValues[def.category] = Math.Max(countryValue, infoCategoryMaxValues[def.category]);
         }
-
-        //infoCategoryMaxValues[def.category] = 0;
     }
 }

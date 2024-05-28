@@ -92,8 +92,6 @@ public class CountryRenderer : MonoBehaviour
 
             var removedInfoCategories = cachedInfoCategories.Except(currentInfoCategories);
             var removedCountryRenderers = cachedCountryRenderers.Except(currentCountryRenderers);
-            /*var addedInfoCategories = currentInfoCategories.Except(cachedInfoCategories);
-            var addedCountryRenderers = currentCountryRenderers.Except(cachedCountryRenderers);*/
 
             // CONNECTION REMOVAL
             // Check if connection removal needed based on removed renderers
