@@ -16,4 +16,14 @@ public class Country
     public readonly Texture2D trackerTexture;
     public readonly bool isPivot;
     public readonly Dictionary<Country, Dictionary<InfoCategory, double?>> data = new();
+
+    public double? GetDataForCountryInfoCategory(Country country, InfoCategory infoCategory)
+    {
+        return country.data.ContainsKey(country) // Does this country have data for the param country?
+            ? country.data[country]
+                .ContainsKey(infoCategory) // Does this country have the InfoCategory data for the param country?
+                ? country.data[country][infoCategory]
+                : null
+            : null;
+    }
 }

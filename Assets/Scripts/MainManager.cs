@@ -108,8 +108,6 @@ public class MainManager : UnitySingleton<MainManager>
         // TODO: Update to use UpdateCountryRelations
     }
 
-    private readonly List<CountryRelation> countryRelations = new();
-
     private void OnCountryRenderersUpdated(List<CountryRenderer> updatedCountryRenderers)
     {
         // Check for relations to be removed

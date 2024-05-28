@@ -7,6 +7,18 @@ using UnityEngine.Splines;
 public class SplineConnection : MonoBehaviour
 {
     public CountryRenderer targetCountryRenderer;
+    public InfoCategory infoCategory;
+
+    public bool Concerns(Country country, InfoCategory infoCategory)
+    {
+        return targetCountryRenderer.country == country && this.infoCategory == infoCategory;
+    }
+    
+    public bool Concerns(CountryRenderer countryRenderer, InfoCategory infoCategory)
+    {
+        return countryRenderer == targetCountryRenderer && this.infoCategory == infoCategory;
+    }
+    
     private Transform targetTransform => targetCountryRenderer == null ? null : targetCountryRenderer.transform;
     public Material splineMaterial;
     public float splineThickness = 0.03f;
@@ -26,7 +38,7 @@ public class SplineConnection : MonoBehaviour
 
     private Spline connectingSpline;
 
-    public void Init(CountryRenderer targetCountryRenderer, Material splineMaterial, float splineThickness)
+    public void Init(CountryRenderer targetCountryRenderer, InfoCategory infoCategory, Material splineMaterial, float splineThickness)
     {
         if (initCompleted)
         {
@@ -91,7 +103,7 @@ public class SplineConnection : MonoBehaviour
 
     public void RemoveSelf()
     {
-        if (targetCountryRenderer != null)
+        if (targetCountryRenderer != null) // GameObject might already be destroyed
         {
             targetCountryRenderer.RemoveIncomingConnection(this);
         }

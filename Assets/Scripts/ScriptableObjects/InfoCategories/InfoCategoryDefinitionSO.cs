@@ -3,8 +3,8 @@ using UnityEngine;
 
 public enum InfoCategory
 {
-    IMPORT,
-    EXPORT
+    IMPORT_TO_AUSTRIA,
+    EXPORT_FROM_AUSTRIA
 }
 
 public enum CategoryType
