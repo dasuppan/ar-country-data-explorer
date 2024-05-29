@@ -10,7 +10,9 @@ public class CountryRenderer : MonoBehaviour
     //private ARTrackedImage trackedImage;
     public Country country { get; private set; }
 
-    [SerializeField] private CountryDefinitionSO predefinedCountry; 
+    [SerializeField] private GameObject countryConnectionRendererPrefab;
+    [SerializeField] private CountryDefinitionSO predefinedCountry;
+    private SpriteRenderer spriteRenderer;
 
     public bool dirty
     {
@@ -18,18 +20,18 @@ public class CountryRenderer : MonoBehaviour
         set => Dirty = value;
     }
 
-    private readonly List<SplineConnection> incomingConnections = new();
+    private readonly List<CountryConnection> incomingConnections = new();
 
-    private readonly List<SplineConnection> outgoingConnections = new();
+    private readonly List<CountryConnection> outgoingConnections = new();
     /*private readonly Dictionary<InfoCategory, SplineConnection> incomingConnections = new();
     private readonly Dictionary<InfoCategory, SplineConnection> outgoingConnections = new();*/
 
-    public bool RemoveIncomingConnection(SplineConnection connection)
+    public bool RemoveIncomingConnection(CountryConnection connection)
     {
         return incomingConnections.Remove(connection);
     }
 
-    public void AddIncomingConnection(SplineConnection connection)
+    public void AddIncomingConnection(CountryConnection connection)
     {
         incomingConnections.Add(connection);
     }
@@ -52,9 +54,9 @@ public class CountryRenderer : MonoBehaviour
 
         if (country != null)
         {
-            GetComponent<SpriteRenderer>().sprite = country.flagSprite;
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            spriteRenderer.sprite = country.flagSprite;
             Debug.LogWarning($"Adding country {country.countryName}");
-            Debug.LogWarning($"Is country pivot? {country.isPivot}");
             Debug.LogWarning($"Country {country.countryName} has {country.data.Count} data points.");
             MainManager.Instance.RegisterCountryRenderer(this);
         }
@@ -83,7 +85,7 @@ public class CountryRenderer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.LookAt(Camera.main.transform, Vector3.up);
+        spriteRenderer.transform.LookAt(Camera.main.transform, Vector3.up);
         // TODO: Respect trackedImage.trackingState?
         if (Dirty)
         {
@@ -131,7 +133,7 @@ public class CountryRenderer : MonoBehaviour
             cachedInfoCategories.AddRange(currentInfoCategories);
             cachedCountryRenderers.Clear();
             cachedCountryRenderers.AddRange(currentCountryRenderers);
-            
+
             Debug.LogWarning(
                 $"Renderer Evaluation completed ({country.countryName}):" +
                 $"\nConnections added: {addedConnectionsCount}" +
@@ -141,7 +143,7 @@ public class CountryRenderer : MonoBehaviour
         }
     }
 
-    private SplineConnection CreateNewOutgoingConnection(InfoCategory iCat, CountryRenderer cRenderer, double value)
+    private CountryConnection CreateNewOutgoingConnection(InfoCategory iCat, CountryRenderer cRenderer, double value)
     {
         if (outgoingConnections.Exists(conn => conn.Concerns(cRenderer, iCat)))
         {
@@ -157,18 +159,18 @@ public class CountryRenderer : MonoBehaviour
             return null;
         }
 
-        var countryConnectionGo =
-            new GameObject($"{iCatDef.categoryName} - {cRenderer.country.countryName}");
-        countryConnectionGo.transform.SetParent(transform);
-        var conn = countryConnectionGo.AddComponent<SplineConnection>();
+        var countryConnectionGo = Instantiate(countryConnectionRendererPrefab, transform);
+        countryConnectionGo.name = $"{iCatDef.categoryName} - {cRenderer.country.countryName}";
+        var conn = countryConnectionGo.GetComponent<CountryConnection>();
 
         // Spline thickness calculation
-        var iCatMaxValue = MainManager.Instance.GetMaxValueForInfoCategory(iCat);
+        /*var iCatMaxValue = MainManager.Instance.GetMaxValueForInfoCategory(iCat);
         var splineThickness = Mathf.Lerp(
             SplineConnection.MinSplineThickness,
             SplineConnection.MaxSplineThickness,
             (float)(value / iCatMaxValue)
-        );
+        );*/
+        var splineThickness = 0.025f;
 
         // TODO: Respect incoming connections in spline curvature
 

@@ -21,8 +21,6 @@ public class MainManager : UnitySingleton<MainManager>
 
     //private ARTrackedImageManager trackedImageManager;
 
-    private CountryRenderer pivotCountryRenderer => countryRenderers.FirstOrDefault(c => c.country.isPivot);
-
     void Start()
     {
         // Instantiate countries

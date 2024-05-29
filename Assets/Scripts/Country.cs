@@ -13,7 +13,6 @@ public class Country
     public readonly string countryName;
     public readonly Sprite flagSprite;
     public readonly Texture2D trackerTexture;
-    public readonly bool isPivot;
     public readonly Dictionary<Country, Dictionary<InfoCategory, double?>> data = new();
 
     public double? GetDataForCountryInfoCategory(Country country, InfoCategory infoCategory)

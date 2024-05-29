@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Splines;
 
-public class SplineConnection : MonoBehaviour
+public class CountryConnection : MonoBehaviour
 {
     public CountryRenderer targetCountryRenderer;
     public InfoCategory infoCategory;
@@ -23,7 +24,7 @@ public class SplineConnection : MonoBehaviour
     public Material splineMaterial;
     public float splineThickness = 0.03f;
 
-    private const float MidPointHeight = 0.04f;
+    private const float MidPointHeight = 0.2f;
     private const int SegmentsPerUnit = 24;
     public static float MinSplineThickness = 0.005f;
     public static float MaxSplineThickness = 0.05f;
@@ -35,8 +36,15 @@ public class SplineConnection : MonoBehaviour
     private MeshRenderer meshRenderer;
     private MeshFilter meshFilter;
     private SplineExtrude splineExtrude;
-
     private Spline connectingSpline;
+
+    private void Awake()
+    {
+        splineContainer = GetComponent<SplineContainer>();
+        meshRenderer = GetComponent<MeshRenderer>();
+        meshFilter = GetComponent<MeshFilter>();
+        splineExtrude = GetComponent<SplineExtrude>();
+    }
 
     public void Init(CountryRenderer targetCountryRenderer, InfoCategory infoCategory, Material splineMaterial, float splineThickness)
     {
@@ -50,7 +58,7 @@ public class SplineConnection : MonoBehaviour
         this.targetCountryRenderer = targetCountryRenderer;
         this.infoCategory = infoCategory;
 
-        splineContainer = gameObject.AddComponent<SplineContainer>();
+        //splineContainer = gameObject.AddComponent<SplineContainer>();
         splineContainer.Splines = new List<Spline>();
 
         // Spline init
@@ -67,14 +75,14 @@ public class SplineConnection : MonoBehaviour
         this.splineThickness = splineThickness;
 
         // Rendering init
-        meshRenderer = gameObject.AddComponent<MeshRenderer>();
+        //meshRenderer = gameObject.AddComponent<MeshRenderer>();
         meshRenderer.material = this.splineMaterial;
-        meshFilter = gameObject.AddComponent<MeshFilter>();
+        //meshFilter = gameObject.AddComponent<MeshFilter>();
         meshFilter.sharedMesh = new Mesh();
 
-        splineExtrude = gameObject.AddComponent<SplineExtrude>();
+        /*splineExtrude = gameObject.AddComponent<SplineExtrude>();
         splineExtrude.Radius = this.splineThickness;
-        splineExtrude.SegmentsPerUnit = SegmentsPerUnit;
+        splineExtrude.SegmentsPerUnit = SegmentsPerUnit;*/
         splineExtrude.Container = splineContainer;
         splineExtrude.RebuildOnSplineChange = true;
 
