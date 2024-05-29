@@ -9,6 +9,9 @@ public class CountryConnection : MonoBehaviour
 {
     public CountryRenderer targetCountryRenderer;
     public InfoCategory infoCategory;
+    public Material splineMaterial;
+    public float splineThickness = 0.03f;
+    public GameObject splineFlowIndicatorPrefab;
 
     public bool Concerns(Country country, InfoCategory infoCategory)
     {
@@ -21,8 +24,6 @@ public class CountryConnection : MonoBehaviour
     }
     
     private Transform targetTransform => targetCountryRenderer == null ? null : targetCountryRenderer.transform;
-    public Material splineMaterial;
-    public float splineThickness = 0.03f;
 
     private const float MidPointHeight = 0.2f;
     private const int SegmentsPerUnit = 24;
@@ -37,6 +38,8 @@ public class CountryConnection : MonoBehaviour
     private MeshFilter meshFilter;
     private SplineExtrude splineExtrude;
     private Spline connectingSpline;
+    
+    private readonly List<GameObject> splineFlowIndicators = new ();
 
     private void Awake()
     {
@@ -75,16 +78,23 @@ public class CountryConnection : MonoBehaviour
         this.splineThickness = splineThickness;
 
         // Rendering init
-        //meshRenderer = gameObject.AddComponent<MeshRenderer>();
         meshRenderer.material = this.splineMaterial;
-        //meshFilter = gameObject.AddComponent<MeshFilter>();
         meshFilter.sharedMesh = new Mesh();
 
-        /*splineExtrude = gameObject.AddComponent<SplineExtrude>();
-        splineExtrude.Radius = this.splineThickness;
-        splineExtrude.SegmentsPerUnit = SegmentsPerUnit;*/
         splineExtrude.Container = splineContainer;
         splineExtrude.RebuildOnSplineChange = true;
+
+        // TODO: Calculate how many spline flow indicators we need
+        var splineFlowIndicatorCount = 5;
+        for (int i = 0; i < splineFlowIndicatorCount; i++)
+        {
+            var indicator = Instantiate(splineFlowIndicatorPrefab, transform);
+            indicator.GetComponent<MeshRenderer>().material = splineMaterial;
+            var animator = indicator.GetComponent<SplineAnimate>();
+            animator.StartOffset = Mathf.Lerp(0,1, i / splineFlowIndicatorCount);
+            animator.Container = splineContainer;
+            splineFlowIndicators.Add(indicator);
+        }
 
         targetCountryRenderer.AddIncomingConnection(this);
 
