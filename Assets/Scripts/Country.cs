@@ -15,7 +15,7 @@ public class Country
     public readonly Texture2D trackerTexture;
     public readonly Dictionary<Country, Dictionary<InfoCategory, double?>> data = new();
 
-    public double? GetDataForCountryInfoCategory(Country country, InfoCategory infoCategory)
+    public double? GetValueForCountryInfoCategory(Country country, InfoCategory infoCategory)
     {
         return data.ContainsKey(country) // Does this country have data for the param country?
             ? data[country]

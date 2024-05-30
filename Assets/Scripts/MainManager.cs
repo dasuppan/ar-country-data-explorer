@@ -15,9 +15,14 @@ public class MainManager : UnitySingleton<MainManager>
     {
         return countries.FirstOrDefault(c => c.countryName == cName);
     }
-    
+
     public readonly List<CountryRenderer> countryRenderers = new();
     private readonly Dictionary<InfoCategory, double> infoCategoryMaxValues = new();
+
+    private List<CountryRelation> countryRelations =>
+        countryRenderers
+            .SelectMany(cRend => cRend.relations)
+            .Distinct().ToList();
 
     //private ARTrackedImageManager trackedImageManager;
 
@@ -37,11 +42,11 @@ public class MainManager : UnitySingleton<MainManager>
         // Parse CSV data
         foreach (var def in infoCategoryDefinitions)
         {
-            
             foreach (var fileConfig in def.fileConfigs)
             {
                 // TODO: Respect max value set by previously processed file configs
-                DataFileConfigSO.ProcessFile(fileConfig, countries, fileConfig.country, def.category, out var relevantCountriesMaxValue);
+                DataFileConfigSO.ProcessFile(fileConfig, countries, fileConfig.country, def.category,
+                    out var relevantCountriesMaxValue);
                 infoCategoryMaxValues[def.category] = relevantCountriesMaxValue;
             }
         }
@@ -72,9 +77,9 @@ public class MainManager : UnitySingleton<MainManager>
     public void RegisterCountryRenderer(CountryRenderer countryRenderer)
     {
         countryRenderers.Add(countryRenderer);
-        var country = countryRenderer.country;
-        Debug.LogWarning($"Renderer for country {country.countryName} was added!");
-        countryRenderers.ForEach(cRend => cRend.ForceEvaluationOnNextFrame());
+        Debug.LogWarning($"Renderer for country {countryRenderer.country.countryName} was added!");
+        countryRenderers.ForEach(cRend => cRend.UpdateRelations());
+        countryRelations.ForEach(cRel => cRel.ReEvaluate());
     }
 
     public void DeregisterCountryRenderer(CountryRenderer countryRenderer)
@@ -82,6 +87,7 @@ public class MainManager : UnitySingleton<MainManager>
         // TODO: Call this method
         countryRenderers.Remove(countryRenderer);
         Debug.LogWarning($"Renderer for country {countryRenderer.country.countryName} was removed!");
-        countryRenderers.ForEach(cRend => cRend.ForceEvaluationOnNextFrame());
+        countryRenderers.ForEach(cRend => cRend.UpdateRelations());
+        countryRelations.ForEach(cRel => cRel.ReEvaluate());
     }
 }

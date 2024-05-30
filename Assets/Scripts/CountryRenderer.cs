@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 
@@ -9,32 +10,74 @@ public class CountryRenderer : MonoBehaviour
 {
     //private ARTrackedImage trackedImage;
     public Country country { get; private set; }
+    [SerializeField]
+    private CountryRelation countryRelationPrefab;
 
-    [SerializeField] private GameObject countryConnectionRendererPrefab;
     [SerializeField] private CountryDefinitionSO predefinedCountry;
     private SpriteRenderer spriteRenderer;
 
-    public bool dirty
-    {
-        get => Dirty;
-        set => Dirty = value;
-    }
+    //private readonly List<CountryConnection> incomingConnections = new();
 
-    private readonly List<CountryConnection> incomingConnections = new();
-
-    private readonly List<CountryConnection> outgoingConnections = new();
+    //private readonly List<CountryConnection> outgoingConnections = new();
     /*private readonly Dictionary<InfoCategory, SplineConnection> incomingConnections = new();
     private readonly Dictionary<InfoCategory, SplineConnection> outgoingConnections = new();*/
 
-    public bool RemoveIncomingConnection(CountryConnection connection)
+    public readonly List<CountryRelation> relations = new();
+
+    private List<CountryRenderer> relatedCountryRenderers => relations
+        .SelectMany(cRel => new[] { cRel.countryRenderer1, cRel.countryRenderer2 })
+        .Where(cRend => cRend != this)
+        .ToList();
+
+    public void UpdateRelations()
     {
-        return incomingConnections.Remove(connection);
+        var theirsCountryRenderers = MainManager.Instance.countryRenderers;
+        var ourCountryRenderers = relatedCountryRenderers;
+        var missingRelationsForCountryRenderers = theirsCountryRenderers
+            .Except(ourCountryRenderers)
+            .Where(cRend => cRend != this).ToList();
+
+        // RELATION ADDING
+
+        var addedRelationsCount = 0;
+        foreach (var cRenderer in missingRelationsForCountryRenderers)
+        {
+            var createdRelation = CreateNewRelation(cRenderer);
+            relations.Add(createdRelation);
+            cRenderer.relations.Add(createdRelation);
+            addedRelationsCount++;
+        }
+        
+        Debug.LogWarning(
+            $"Relations updated for cRenderer ({ToString()}):" +
+            $"\nRelations added: {addedRelationsCount}"
+            /*$"\nRelations removed: {removedConnectionsCount}"*/
+        );
     }
 
-    public void AddIncomingConnection(CountryConnection connection)
+    private CountryRelation CreateNewRelation(CountryRenderer toCountryRenderer)
     {
-        incomingConnections.Add(connection);
+        if (relations.Exists(cRel => cRel.Concerns(this, toCountryRenderer)))
+        {
+            // TODO: This case will occur often, we should not log this
+            Debug.LogWarning(
+                $"There already exists a relation that deals with the connections between {country.countryName} and {toCountryRenderer.country}! Aborting...");
+            return null;
+        }
+        
+        var countryRelationGo = Instantiate(countryRelationPrefab, Vector3.zero, Quaternion.identity);
+        var cRel = countryRelationGo.GetComponent<CountryRelation>();
+        cRel.Init(this, toCountryRenderer);
+        
+        return cRel;
     }
+
+    /*private int GetConnectionsCountTo(CountryRenderer countryRenderer)
+    {
+        return outgoingConnections
+            .Where(conn => conn.toCountryRenderer == countryRenderer)
+            .ToList().Count;
+    }*/
 
     void Start()
     {
@@ -72,115 +115,10 @@ public class CountryRenderer : MonoBehaviour
         MainManager.Instance.DeregisterCountryRenderer(this);
     }*/
 
-    [NonSerialized] private bool Dirty;
-
-    public void ForceEvaluationOnNextFrame()
-    {
-        Dirty = true;
-    }
-
-    private readonly List<InfoCategory> cachedInfoCategories = new();
-    private readonly List<CountryRenderer> cachedCountryRenderers = new();
-
     // Update is called once per frame
     void Update()
     {
         spriteRenderer.transform.LookAt(Camera.main.transform, Vector3.up);
         // TODO: Respect trackedImage.trackingState?
-        if (Dirty)
-        {
-            var currentInfoCategories = MainManager.Instance.activeInfoCategories;
-            var currentCountryRenderers = MainManager.Instance.countryRenderers;
-
-            var removedInfoCategories = cachedInfoCategories.Except(currentInfoCategories);
-            var removedCountryRenderers = cachedCountryRenderers.Except(currentCountryRenderers);
-
-            // CONNECTION REMOVAL
-            // Check if connection removal needed based on removed renderers
-            var toRemoveOutgoingConnections1 = outgoingConnections.Where(conn =>
-                removedCountryRenderers.Contains(conn.targetCountryRenderer)
-            );
-            // Check if connection removal needed based on removed infoCategories
-            var toRemoveOutgoingConnections2 = outgoingConnections.Where(conn =>
-                removedInfoCategories.Contains(conn.infoCategory)
-            );
-
-            var toRemoveOutgoingConnections = toRemoveOutgoingConnections1.Union(toRemoveOutgoingConnections2).ToList();
-            // Notify connections of their removal
-            toRemoveOutgoingConnections.ForEach(conn => conn.RemoveSelf());
-            // Remove connections from lists
-            toRemoveOutgoingConnections.ForEach(conn => outgoingConnections.Remove(conn));
-            var removedConnectionsCount = toRemoveOutgoingConnections.Count;
-
-            // CONNECTION EXISTENCE CHECK & ADDING
-
-            var addedConnectionsCount = 0;
-            foreach (var cRenderer in currentCountryRenderers)
-            {
-                foreach (var iCat in currentInfoCategories)
-                {
-                    if (outgoingConnections.Exists(conn => conn.Concerns(cRenderer, iCat))) continue;
-
-                    var catData = country.GetDataForCountryInfoCategory(cRenderer.country, iCat);
-                    if (catData == null) continue;
-
-                    outgoingConnections.Add(CreateNewOutgoingConnection(iCat, cRenderer, (double)catData));
-                    addedConnectionsCount++;
-                }
-            }
-
-            cachedInfoCategories.Clear();
-            cachedInfoCategories.AddRange(currentInfoCategories);
-            cachedCountryRenderers.Clear();
-            cachedCountryRenderers.AddRange(currentCountryRenderers);
-
-            Debug.LogWarning(
-                $"Renderer Evaluation completed ({country.countryName}):" +
-                $"\nConnections added: {addedConnectionsCount}" +
-                $"\nConnections removed: {removedConnectionsCount}"
-            );
-            Dirty = false;
-        }
-    }
-
-    private CountryConnection CreateNewOutgoingConnection(InfoCategory iCat, CountryRenderer cRenderer, double value)
-    {
-        if (outgoingConnections.Exists(conn => conn.Concerns(cRenderer, iCat)))
-        {
-            Debug.LogError(
-                $"There exists a connection that deals with the combination {cRenderer.country}/{iCat}! Aborting...");
-            return null;
-        }
-
-        var iCatDef = MainManager.Instance.GetInfoCategoryDefinition(iCat);
-        if (iCatDef == null)
-        {
-            Debug.LogError($"No info category definition found for category {iCat}! Aborting...");
-            return null;
-        }
-
-        var countryConnectionGo = Instantiate(countryConnectionRendererPrefab, transform);
-        countryConnectionGo.name = $"{iCatDef.categoryName} - {cRenderer.country.countryName}";
-        var conn = countryConnectionGo.GetComponent<CountryConnection>();
-
-        // Spline thickness calculation
-        /*var iCatMaxValue = MainManager.Instance.GetMaxValueForInfoCategory(iCat);
-        var splineThickness = Mathf.Lerp(
-            SplineConnection.MinSplineThickness,
-            SplineConnection.MaxSplineThickness,
-            (float)(value / iCatMaxValue)
-        );*/
-        var splineThickness = 0.025f;
-
-        // TODO: Respect incoming connections in spline curvature
-
-        conn.Init(
-            cRenderer,
-            iCat,
-            iCatDef.splineMaterial,
-            splineThickness
-        );
-
-        return conn;
     }
 }
