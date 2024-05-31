@@ -89,10 +89,13 @@ public class CountryRenderer : MonoBehaviour
         }
         else
         {
-            var trackedImage = GetComponent<ARTrackedImage>();
+            
+            /*var trackedImage = GetComponent<ARTrackedImage>();
             country = MainManager.Instance.GetCountryByReferenceImageName(
                 trackedImage.referenceImage.name
-            );
+            );*/
+            country = MainManager.Instance.GetRandomMissingCountry();
+            // TODO: Handle null case
         }
 
         if (country != null)

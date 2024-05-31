@@ -90,4 +90,17 @@ public class MainManager : UnitySingleton<MainManager>
         countryRenderers.ForEach(cRend => cRend.UpdateRelations());
         countryRelations.ForEach(cRel => cRel.ReEvaluate());
     }
+
+    public Country GetRandomMissingCountry()
+    {
+        var availableCountries = countries.Except(countryRenderers.Select(cRend => cRend.country)).ToList();
+
+        if (availableCountries.Count == 0)
+        {
+            Debug.LogWarning("No more countries to add!");
+            return null;
+        }
+
+        return availableCountries[Random.Range(0, availableCountries.Count)];
+    }
 }
