@@ -33,8 +33,7 @@ public class MainManager : UnitySingleton<MainManager>
             countryDefinitions.Select(
                 cDef => new Country(
                     cDef.countryName,
-                    cDef.flagSprite,
-                    cDef.trackerTexture
+                    cDef.flagSprite
                 )
             )
         );
@@ -67,11 +66,6 @@ public class MainManager : UnitySingleton<MainManager>
             .Where(pair => relCategories.Contains(pair.Key))
             .Select(pair => pair.Value);
         return relMaxValues.Max();
-    }
-
-    public Country GetCountryByReferenceImageName(string imgName)
-    {
-        return countries.FirstOrDefault(c => c.trackerTexture.name == imgName);
     }
 
     public void RegisterCountryRenderer(CountryRenderer countryRenderer)

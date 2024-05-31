@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace ScriptableObjects.Countries
 {
@@ -8,6 +7,5 @@ namespace ScriptableObjects.Countries
     {
         public string countryName;
         public Sprite flagSprite;
-        public Texture2D trackerTexture;
     }
 }

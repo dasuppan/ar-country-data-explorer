@@ -3,16 +3,14 @@ using UnityEngine;
 
 public class Country
 {
-    public Country(string countryName, Sprite flagSprite, Texture2D trackerTexture)
+    public Country(string countryName, Sprite flagSprite)
     {
         this.countryName = countryName;
         this.flagSprite = flagSprite;
-        this.trackerTexture = trackerTexture;
     }
 
     public readonly string countryName;
     public readonly Sprite flagSprite;
-    public readonly Texture2D trackerTexture;
     public readonly Dictionary<Country, Dictionary<InfoCategory, double?>> data = new();
 
     public double? GetValueForCountryInfoCategory(Country country, InfoCategory infoCategory)
