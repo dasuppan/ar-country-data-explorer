@@ -118,7 +118,6 @@ public class CountryRenderer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        spriteRenderer.transform.LookAt(Camera.main.transform, Vector3.up);
         // TODO: Respect trackedImage.trackingState?
     }
 }

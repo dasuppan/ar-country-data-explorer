@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using Unity.VisualScripting;
+using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Splines;
 
@@ -36,7 +39,10 @@ public class CountryConnection : MonoBehaviour
     private Transform fromTransform => fromCountryRenderer == null ? null : fromCountryRenderer.transform;
     private Transform toTransform => toCountryRenderer == null ? null : toCountryRenderer.transform;
 
-    private const float MidPointHeight = 0.2f;
+    private const float SplineMidPointYOffset = 0.2f;
+    private const float DescriptionYOffset = 0.1f;
+
+    private const float SiblingConnectionXOffset = 0.05f;
     /*private const int SegmentsPerUnit = 24;
     public static float MinSplineThickness = 0.005f;
     public static float MaxSplineThickness = 0.05f;*/
@@ -49,8 +55,9 @@ public class CountryConnection : MonoBehaviour
     private MeshFilter meshFilter;
     private SplineExtrude splineExtrude;
     private Spline connectingSpline;
+    private TextMeshPro descriptionMesh;
 
-    private readonly List<GameObject> splineFlowIndicators = new();
+    private readonly List<SplineAnimate> splineAnimators = new();
 
     private void Awake()
     {
@@ -58,6 +65,7 @@ public class CountryConnection : MonoBehaviour
         meshRenderer = GetComponent<MeshRenderer>();
         meshFilter = GetComponent<MeshFilter>();
         splineExtrude = GetComponent<SplineExtrude>();
+        descriptionMesh = GetComponentInChildren<TextMeshPro>();
     }
 
     public void UpdatePositionInfo(int connectionPositionIndex, int siblingConnectionsCount)
@@ -71,11 +79,9 @@ public class CountryConnection : MonoBehaviour
         CountryRenderer toCountryRenderer,
         InfoCategory infoCategory,
         Material splineMaterial,
-        float splineThickness = 0.015f
+        double value
     )
     {
-        transform.localPosition = Vector3.zero;
-
         if (initCompleted)
         {
             Debug.LogWarning("Already initialized. Aborting...");
@@ -85,11 +91,11 @@ public class CountryConnection : MonoBehaviour
         this.fromCountryRenderer = fromCountryRenderer;
         this.toCountryRenderer = toCountryRenderer;
         this.infoCategory = infoCategory;
-
-        //splineContainer = gameObject.AddComponent<SplineContainer>();
-        splineContainer.Splines = new List<Spline>();
+        this.splineMaterial = splineMaterial;
+        transform.localPosition = Vector3.zero;
 
         // Spline init
+        splineContainer.Splines = new List<Spline>();
         connectingSpline = splineContainer.AddSpline();
         connectingSpline.AddRange(new[]
         {
@@ -99,15 +105,15 @@ public class CountryConnection : MonoBehaviour
         });
         connectingSpline.SetTangentMode(TangentMode.AutoSmooth);
 
-        this.splineMaterial = splineMaterial;
-        //this.splineThickness = splineThickness;
-
         // Rendering init
         meshRenderer.material = this.splineMaterial;
         meshFilter.sharedMesh = new Mesh();
 
         splineExtrude.Container = splineContainer;
         splineExtrude.RebuildOnSplineChange = true;
+
+        descriptionMesh.text = $"{value}";
+        descriptionMesh.color = this.splineMaterial.color;
 
         // TODO: Calculate how many spline flow indicators we need
         var splineFlowIndicatorCount = 5;
@@ -116,10 +122,10 @@ public class CountryConnection : MonoBehaviour
             var indicator = Instantiate(splineFlowIndicatorPrefab, transform);
             indicator.GetComponent<MeshRenderer>().material = splineMaterial;
             var animator = indicator.GetComponent<SplineAnimate>();
-            animator.StartOffset = Mathf.Lerp(0, 1, (float) i / splineFlowIndicatorCount);
+            animator.StartOffset = Mathf.Lerp(0, 1, (float)i / splineFlowIndicatorCount);
             animator.Container = splineContainer;
             animator.Play();
-            splineFlowIndicators.Add(indicator);
+            splineAnimators.Add(animator);
         }
 
         //toCountryRenderer.AddIncomingConnection(this);
@@ -128,8 +134,6 @@ public class CountryConnection : MonoBehaviour
     }
 
     private bool initCompleted;
-
-    private const float SiblingConnectionOffset = 0.05f;
 
     private void Update()
     {
@@ -144,17 +148,22 @@ public class CountryConnection : MonoBehaviour
         connectingSpline.SetKnot(0, knot0);
         var knot1Pos = (fromTransform.position +
                         (toTransform.position - fromTransform.position) / 2);
-        if (siblingConnectionsCount > 0)
-        {
-            knot1Pos += transform.right * (connectionPositionIndex * SiblingConnectionOffset);
-        }
-
-        knot1.Position =
-            transform.InverseTransformPoint(knot1Pos);
-        knot1.Position.y = MidPointHeight; // TODO: Relative to both transforms?
+        knot1Pos += transform.right * (connectionPositionIndex * SiblingConnectionXOffset);
+        knot1Pos.y = SplineMidPointYOffset; // TODO: Relative to both transforms?
+        knot1.Position = transform.InverseTransformPoint(knot1Pos);
         connectingSpline.SetKnot(1, knot1);
         knot2.Position = transform.InverseTransformPoint(toTransform.position);
         connectingSpline.SetKnot(2, knot2);
+
+        descriptionMesh.transform.position =
+            transform.InverseTransformPoint(knot1Pos + Vector3.up * DescriptionYOffset);
+        /*splineAnimators.ForEach(sA => sA.gameObject.SetActive(true));
+        splineAnimators.ForEach(sA => sA.enabled = true);
+        splineAnimators.ForEach(sA => sA.Play());
+        Debug.LogWarning("IsPlaying");
+        Debug.LogWarning(splineAnimators.Select(fI => fI.GetComponent<SplineAnimate>().IsPlaying).ToList().Stringify().ToString());
+        Debug.LogWarning("Active");
+        Debug.LogWarning(splineAnimators.Select(fI => fI.GetComponent<SplineAnimate>().isActiveAndEnabled).ToList().Stringify().ToString());*/
     }
 
     public void RemoveSelf()

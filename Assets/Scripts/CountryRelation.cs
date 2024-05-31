@@ -190,7 +190,7 @@ public class CountryRelation : MonoBehaviour
             toCountryRenderer,
             iCat,
             iCatDef.splineMaterial,
-            splineThickness
+            value
         );
 
         return conn;
