@@ -1,26 +1,23 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
-using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.XR.ARFoundation;
+using Utils.GameEvents.Events;
 
 public class CountryRenderer : MonoBehaviour
 {
-    //private ARTrackedImage trackedImage;
     public Country country { get; private set; }
     [SerializeField]
     private CountryRelation countryRelationPrefab;
 
     [SerializeField] private CountryDefinitionSO predefinedCountry;
+    
+    [SerializeField]
+    private CountryRendererEvent countryRendererAddedEvent;
+    [SerializeField]
+    private CountryRendererEvent countryRendererRemovedEvent;
+    
     private SpriteRenderer spriteRenderer;
-
-    //private readonly List<CountryConnection> incomingConnections = new();
-
-    //private readonly List<CountryConnection> outgoingConnections = new();
-    /*private readonly Dictionary<InfoCategory, SplineConnection> incomingConnections = new();
-    private readonly Dictionary<InfoCategory, SplineConnection> outgoingConnections = new();*/
 
     public readonly List<CountryRelation> relations = new();
 
@@ -72,13 +69,6 @@ public class CountryRenderer : MonoBehaviour
         return cRel;
     }
 
-    /*private int GetConnectionsCountTo(CountryRenderer countryRenderer)
-    {
-        return outgoingConnections
-            .Where(conn => conn.toCountryRenderer == countryRenderer)
-            .ToList().Count;
-    }*/
-
     void Start()
     {
         if (predefinedCountry != null)
@@ -104,7 +94,7 @@ public class CountryRenderer : MonoBehaviour
             spriteRenderer.sprite = country.flagSprite;
             Debug.LogWarning($"Adding country {country.countryName}");
             Debug.LogWarning($"Country {country.countryName} has {country.data.Count} data points.");
-            MainManager.Instance.RegisterCountryRenderer(this);
+            countryRendererAddedEvent.Raise(this);
         }
         else
         {
@@ -112,15 +102,15 @@ public class CountryRenderer : MonoBehaviour
             Debug.LogWarning("No country found for tracker. Renderer is idling...");
         }
     }
-
-    /*private void OnDestroy()
+    
+    public void RemoveSelf()
     {
-        MainManager.Instance.DeregisterCountryRenderer(this);
-    }*/
-
-    // Update is called once per frame
-    void Update()
+        countryRendererRemovedEvent.Raise(this);
+        Destroy(gameObject);
+    }
+    
+    public void OnCountryRelationRemoved(CountryRelation countryRelation)
     {
-        // TODO: Respect trackedImage.trackingState?
+        relations.Remove(countryRelation);
     }
 }

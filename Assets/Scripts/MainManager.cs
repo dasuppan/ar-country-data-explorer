@@ -68,7 +68,7 @@ public class MainManager : UnitySingleton<MainManager>
         return relMaxValues.Max();
     }
 
-    public void RegisterCountryRenderer(CountryRenderer countryRenderer)
+    public void OnCountryRendererAdded(CountryRenderer countryRenderer)
     {
         countryRenderers.Add(countryRenderer);
         Debug.LogWarning($"Renderer for country {countryRenderer.country.countryName} was added!");
@@ -76,9 +76,8 @@ public class MainManager : UnitySingleton<MainManager>
         countryRelations.ForEach(cRel => cRel.ReEvaluate());
     }
 
-    public void DeregisterCountryRenderer(CountryRenderer countryRenderer)
+    public void OnCountryRendererRemoved(CountryRenderer countryRenderer)
     {
-        // TODO: Call this method
         countryRenderers.Remove(countryRenderer);
         Debug.LogWarning($"Renderer for country {countryRenderer.country.countryName} was removed!");
         countryRenderers.ForEach(cRend => cRend.UpdateRelations());

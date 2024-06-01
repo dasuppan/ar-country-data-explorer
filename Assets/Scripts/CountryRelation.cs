@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Utils.GameEvents.Events;
 
 public class CountryRelation : MonoBehaviour
 {
@@ -84,6 +85,15 @@ public class CountryRelation : MonoBehaviour
             );
     }
 
+    public void OnCountryRendererRemoved(CountryRenderer countryRenderer)
+    {
+        if (countryRenderer1 == countryRenderer || countryRenderer2 == countryRenderer)
+        {
+            Debug.LogWarning($"Removing relation {gameObject.name} due to removed renderer for country {countryRenderer.country.countryName}!");
+            Destroy(gameObject);
+        }
+    }
+
     private void Update()
     {
         /*if (Dirty)
@@ -153,7 +163,7 @@ public class CountryRelation : MonoBehaviour
         CountryRenderer fromCountryRenderer,
         CountryRenderer toCountryRenderer,
         InfoCategory iCat,
-        double value // TODO: Use this value?
+        double value
     )
     {
         if (connections.Exists(conn => conn.Concerns(fromCountryRenderer, toCountryRenderer, iCat)))
