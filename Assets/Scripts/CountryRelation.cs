@@ -97,71 +97,6 @@ public class CountryRelation : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        /*if (Dirty)
-        {
-            var currentInfoCategories = MainManager.Instance.activeInfoCategories;
-            var currentCountryRenderers = MainManager.Instance.countryRenderers;
-
-            var removedInfoCategories = cachedInfoCategories.Except(currentInfoCategories);
-            var removedCountryRenderers = cachedCountryRenderers.Except(currentCountryRenderers);
-
-            // CONNECTION REMOVAL
-            // Check if connection removal needed based on removed renderers
-            var toRemoveOutgoingConnections1 = connections.Where(conn =>
-                removedCountryRenderers.Contains(conn.toCountryRenderer)
-            );
-            // Check if connection removal needed based on removed infoCategories
-            var toRemoveOutgoingConnections2 = connections.Where(conn =>
-                removedInfoCategories.Contains(conn.infoCategory)
-            );
-
-            var toRemoveOutgoingConnections = toRemoveOutgoingConnections1.Union(toRemoveOutgoingConnections2).ToList();
-            // Notify connections of their removal
-            toRemoveOutgoingConnections.ForEach(conn => conn.RemoveSelf());
-            // Remove connections from lists
-            toRemoveOutgoingConnections.ForEach(conn => connections.Remove(conn));
-            var removedConnectionsCount = toRemoveOutgoingConnections.Count;
-
-            // CONNECTION EXISTENCE CHECK & ADDING
-
-            var addedConnectionsCount = 0;
-            foreach (var cRenderer in currentCountryRenderers)
-            {
-                foreach (var iCat in currentInfoCategories)
-                {
-                    if (connections.Exists(conn => conn.Concerns(cRenderer, iCat))) continue;
-
-                    var catData = country.GetDataForCountryInfoCategory(cRenderer.country, iCat);
-                    if (catData == null) continue;
-
-                    connections.Add(CreateNewOutgoingConnection(iCat, cRenderer, (double)catData));
-                    addedConnectionsCount++;
-                }
-            }
-
-            // Update position info of outgoing connections according to incoming connections (to/from same country)
-            // TODO: This assumes update completion by every country renderer -> race condition
-            foreach (var outConn in connections)
-            {
-                var incomingConnectionsCount = outConn.toCountryRenderer.GetConnectionsCountTo(this);
-            }
-
-            cachedInfoCategories.Clear();
-            cachedInfoCategories.AddRange(currentInfoCategories);
-            cachedCountryRenderers.Clear();
-            cachedCountryRenderers.AddRange(currentCountryRenderers);
-
-            Debug.LogWarning(
-                $"Relation Evaluation completed ({ToString()}):" +
-                $"\nConnections added: {addedConnectionsCount}" +
-                $"\nConnections removed: {removedConnectionsCount}"
-            );
-            Dirty = false;
-        }*/
-    }
-
     private CountryConnection CreateNewConnection(
         CountryRenderer fromCountryRenderer,
         CountryRenderer toCountryRenderer,
@@ -194,7 +129,6 @@ public class CountryRelation : MonoBehaviour
             SplineConnection.MaxSplineThickness,
             (float)(value / iCatMaxValue)
         );*/
-        var splineThickness = 0.025f;
 
         conn.Init(
             fromCountryRenderer,
