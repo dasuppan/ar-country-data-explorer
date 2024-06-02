@@ -74,7 +74,11 @@ public class CountryRelation : MonoBehaviour
             
             for (var i = 0; i < connections.Count; i++)
             {
-                connections[i].UpdatePositionInfo(i, connections.Count);
+                connections[i].UpdateSplineMetas(
+                    i, 
+                    connections.Count,
+                    connections.Select(c => c.connectionValue).Max()
+                );
             }
             
             Debug.LogWarning(

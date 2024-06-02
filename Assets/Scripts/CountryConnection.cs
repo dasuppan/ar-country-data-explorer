@@ -10,40 +10,27 @@ using Utils;
 
 public class CountryConnection : MonoBehaviour
 {
+    private const float SplineMidPointYOffset = 0.1f;
+    private const float DescriptionYOffset = 0.1f;
+    private const float SiblingConnectionXOffset = 0.05f;
+    private const float MinTimeToFinishSplineAnimationSeconds = 1f;
+    private const float MaxTimeToFinishSplineAnimationSeconds = 5f;
+
     public CountryRenderer fromCountryRenderer;
     public CountryRenderer toCountryRenderer;
     public InfoCategory infoCategory;
-
     public Material splineMaterial;
+    public GameObject splineFlowIndicatorPrefab;
+    public double connectionValue { get; private set; }
 
     //public float splineThickness = 0.03f;
-    public GameObject splineFlowIndicatorPrefab;
+    
+    // Spline metas
     private int connectionPositionIndex = 0;
     private int siblingConnectionsCount = 0;
-
-    /*public bool Concerns(Country country, InfoCategory infoCategory)
-    {
-        return toCountryRenderer.country == country && this.infoCategory == infoCategory;
-    }*/
-
-    public bool Concerns(
-        CountryRenderer fromCountryRenderer,
-        CountryRenderer toCountryRenderer,
-        InfoCategory infoCategory
-    )
-    {
-        return this.fromCountryRenderer == fromCountryRenderer &&
-               this.toCountryRenderer == toCountryRenderer &&
-               this.infoCategory == infoCategory;
-    }
-
-    private Transform fromTransform => fromCountryRenderer == null ? null : fromCountryRenderer.transform;
-    private Transform toTransform => toCountryRenderer == null ? null : toCountryRenderer.transform;
-
-    private const float SplineMidPointYOffset = 0.1f;
-    private const float DescriptionYOffset = 0.1f;
-
-    private const float SiblingConnectionXOffset = 0.05f;
+    private float splineAnimationSpeedSeconds = 1.0f;
+    private bool splineMetasUpdated;
+    
     /*private const int SegmentsPerUnit = 24;
     public static float MinSplineThickness = 0.005f;
     public static float MaxSplineThickness = 0.05f;*/
@@ -57,8 +44,21 @@ public class CountryConnection : MonoBehaviour
     private SplineExtrude splineExtrude;
     private Spline connectingSpline;
     private TextMeshPro descriptionMesh;
-
+    
     private readonly List<MoveAlongSpline> splineAnimators = new();
+    private Transform fromTransform => fromCountryRenderer == null ? null : fromCountryRenderer.transform;
+    private Transform toTransform => toCountryRenderer == null ? null : toCountryRenderer.transform;
+
+    public bool Concerns(
+        CountryRenderer fromCountryRenderer,
+        CountryRenderer toCountryRenderer,
+        InfoCategory infoCategory
+    )
+    {
+        return this.fromCountryRenderer == fromCountryRenderer &&
+               this.toCountryRenderer == toCountryRenderer &&
+               this.infoCategory == infoCategory;
+    }
 
     private void Awake()
     {
@@ -69,10 +69,19 @@ public class CountryConnection : MonoBehaviour
         descriptionMesh = GetComponentInChildren<TextMeshPro>();
     }
 
-    public void UpdatePositionInfo(int connectionPositionIndex, int siblingConnectionsCount)
+    public void UpdateSplineMetas(
+        int connectionPositionIndex,
+        int siblingConnectionsCount,
+        double maxSiblingValue
+    )
     {
         this.connectionPositionIndex = connectionPositionIndex;
         this.siblingConnectionsCount = siblingConnectionsCount;
+        this.splineAnimationSpeedSeconds = Mathf.Lerp(
+            MaxTimeToFinishSplineAnimationSeconds, MinTimeToFinishSplineAnimationSeconds,
+            (float) (connectionValue / maxSiblingValue)
+        );
+        splineMetasUpdated = true;
     }
 
     public void Init(
@@ -93,6 +102,7 @@ public class CountryConnection : MonoBehaviour
         this.toCountryRenderer = toCountryRenderer;
         this.infoCategory = infoCategory;
         this.splineMaterial = splineMaterial;
+        this.connectionValue = value;
         transform.localPosition = Vector3.zero;
 
         // Spline init
@@ -126,7 +136,7 @@ public class CountryConnection : MonoBehaviour
             animator.Init(
                 splineContainer,
                 Mathf.Lerp(0, 1, (float)i / splineFlowIndicatorCount),
-                2f
+                1f // Some default value, will be overwritten
             );
             //animator.Play();
             splineAnimators.Add(animator);
@@ -140,7 +150,8 @@ public class CountryConnection : MonoBehaviour
     private void Update()
     {
         if (!initCompleted) return;
-        if (!toTransform.hasChanged && !fromTransform.hasChanged) return;
+        if (!splineMetasUpdated && !toTransform.hasChanged && !fromTransform.hasChanged) return;
+        splineMetasUpdated = false;
 
         // We assume a three knotted spline
         var knot0 = connectingSpline.Knots.ToArray()[0];
@@ -151,8 +162,8 @@ public class CountryConnection : MonoBehaviour
         var splineStart = fromTransform.position;
         var splineEnd = toTransform.position;
         var splineVector = splineEnd - splineStart;
-        // Go into Vector3.right direction relative to splineDirection
-        var splineRightDirection = Vector3.Cross(splineVector.normalized, Vector3.up).normalized;
+        
+        var splineRightDirection = Vector3.Cross(splineVector, Vector3.up).normalized;
         var splineUpDirection = Vector3.Cross(splineRightDirection, splineVector).normalized;
         var knot1Poss = splineStart +
                         (splineVector / 2) +
@@ -170,6 +181,8 @@ public class CountryConnection : MonoBehaviour
         connectingSpline.SetKnot(1, knot1);
         knot2.Position = transform.InverseTransformPoint(toTransform.position);
         connectingSpline.SetKnot(2, knot2);
+        
+        splineAnimators.ForEach(a => a.timeToTravel = splineAnimationSpeedSeconds);
 
         descriptionMesh.transform.position =
             transform.InverseTransformPoint(knot1Poss + Vector3.up * DescriptionYOffset);
