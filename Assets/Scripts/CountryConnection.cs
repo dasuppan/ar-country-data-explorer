@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using Unity.VisualScripting;
-using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Splines;
 using Utils;
@@ -13,6 +12,7 @@ public class CountryConnection : MonoBehaviour
     private const float SplineMidPointYOffset = 0.1f;
     private const float DescriptionYOffset = 0.1f;
     private const float SiblingConnectionXOffset = 0.05f;
+    private const int SplineFlowIndicatorCount = 5;
     private const float MinTimeToFinishSplineAnimationSeconds = 1f;
     private const float MaxTimeToFinishSplineAnimationSeconds = 5f;
 
@@ -23,20 +23,11 @@ public class CountryConnection : MonoBehaviour
     public GameObject splineFlowIndicatorPrefab;
     public double connectionValue { get; private set; }
 
-    //public float splineThickness = 0.03f;
-    
     // Spline metas
     private int connectionPositionIndex = 0;
     private int siblingConnectionsCount = 0;
     private float splineAnimationSpeedSeconds = 1.0f;
     private bool splineMetasUpdated;
-    
-    /*private const int SegmentsPerUnit = 24;
-    public static float MinSplineThickness = 0.005f;
-    public static float MaxSplineThickness = 0.05f;*/
-
-
-    //private const float defaultSplineThickness = 0.01f;
 
     private SplineContainer splineContainer;
     private MeshRenderer meshRenderer;
@@ -44,7 +35,7 @@ public class CountryConnection : MonoBehaviour
     private SplineExtrude splineExtrude;
     private Spline connectingSpline;
     private TextMeshPro descriptionMesh;
-    
+
     private readonly List<MoveAlongSpline> splineAnimators = new();
     private Transform fromTransform => fromCountryRenderer == null ? null : fromCountryRenderer.transform;
     private Transform toTransform => toCountryRenderer == null ? null : toCountryRenderer.transform;
@@ -79,7 +70,7 @@ public class CountryConnection : MonoBehaviour
         this.siblingConnectionsCount = siblingConnectionsCount;
         this.splineAnimationSpeedSeconds = Mathf.Lerp(
             MaxTimeToFinishSplineAnimationSeconds, MinTimeToFinishSplineAnimationSeconds,
-            (float) (connectionValue / maxSiblingValue)
+            (float)(connectionValue / maxSiblingValue)
         );
         splineMetasUpdated = true;
     }
@@ -126,19 +117,15 @@ public class CountryConnection : MonoBehaviour
         descriptionMesh.text = $"{value.ToFormattedString()}";
         descriptionMesh.color = this.splineMaterial.color;
 
-        // TODO: Calculate how many spline flow indicators we need OR the time to travel
-        var splineFlowIndicatorCount = 5;
-        for (int i = 0; i < splineFlowIndicatorCount; i++)
+        for (int i = 0; i < SplineFlowIndicatorCount; i++)
         {
             var indicator = Instantiate(splineFlowIndicatorPrefab, transform);
             indicator.GetComponent<MeshRenderer>().material = splineMaterial;
             var animator = indicator.GetComponent<MoveAlongSpline>();
             animator.Init(
                 splineContainer,
-                Mathf.Lerp(0, 1, (float)i / splineFlowIndicatorCount),
-                1f // Some default value, will be overwritten
+                Mathf.Lerp(0, 1, (float)i / SplineFlowIndicatorCount)
             );
-            //animator.Play();
             splineAnimators.Add(animator);
         }
 
@@ -153,43 +140,33 @@ public class CountryConnection : MonoBehaviour
         if (!splineMetasUpdated && !toTransform.hasChanged && !fromTransform.hasChanged) return;
         splineMetasUpdated = false;
 
-        // We assume a three knotted spline
-        var knot0 = connectingSpline.Knots.ToArray()[0];
-        var knot1 = connectingSpline.Knots.ToArray()[1];
-        var knot2 = connectingSpline.Knots.ToArray()[2];
-
-
         var splineStart = fromTransform.position;
         var splineEnd = toTransform.position;
         var splineVector = splineEnd - splineStart;
-        
+
         var splineRightDirection = Vector3.Cross(splineVector, Vector3.up).normalized;
         var splineUpDirection = Vector3.Cross(splineRightDirection, splineVector).normalized;
-        var knot1Poss = splineStart +
+        var knot1Pos = splineStart +
                         (splineVector / 2) +
                         (splineUpDirection * SplineMidPointYOffset) +
                         (splineRightDirection * (connectionPositionIndex * SiblingConnectionXOffset));
 
 
+        // We assume a three knotted spline
+        var knot0 = connectingSpline.Knots.ToArray()[0];
+        var knot1 = connectingSpline.Knots.ToArray()[1];
+        var knot2 = connectingSpline.Knots.ToArray()[2];
+        
         knot0.Position = transform.InverseTransformPoint(fromTransform.position);
         connectingSpline.SetKnot(0, knot0);
-        /*var knot1Pos = (fromTransform.position +
-                        (toTransform.position - fromTransform.position) / 2);
-        knot1Pos += transform.right * (connectionPositionIndex * SiblingConnectionXOffset);
-        knot1Pos.y = SplineMidPointYOffset; // TODO: Relative to both transforms?*/
-        knot1.Position = transform.InverseTransformPoint(knot1Poss);
+        knot1.Position = transform.InverseTransformPoint(knot1Pos);
         connectingSpline.SetKnot(1, knot1);
         knot2.Position = transform.InverseTransformPoint(toTransform.position);
         connectingSpline.SetKnot(2, knot2);
-        
+
         splineAnimators.ForEach(a => a.timeToTravel = splineAnimationSpeedSeconds);
 
         descriptionMesh.transform.position =
-            transform.InverseTransformPoint(knot1Poss + Vector3.up * DescriptionYOffset);
+            transform.InverseTransformPoint(knot1Pos + Vector3.up * DescriptionYOffset);
     }
-
-    /*public void RemoveSelf()
-    {
-        Destroy(gameObject);
-    }*/
 }

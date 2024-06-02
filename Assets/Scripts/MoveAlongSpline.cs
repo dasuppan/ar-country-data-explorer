@@ -1,22 +1,17 @@
 ﻿using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.Splines;
 
 public class MoveAlongSpline: MonoBehaviour
 {
-    private const float directionStepSize = 0.05f;
+    private const float DirectionStepSize = 0.05f;
     
     public SplineContainer container;
-    // Between 0 and 1
-    public float startOffset;
     public float timeToTravel = 1f;
-    //public float speed = 1f;
     private float distancePercentage = 0f;
     
-    public void Init(SplineContainer container, float startOffset, float timeToTravel)
+    public void Init(SplineContainer container, float startOffset, float timeToTravel = 1f)
     {
         this.container = container;
-        this.startOffset = startOffset;
         this.timeToTravel = timeToTravel;
         distancePercentage = startOffset;
         initCompleted = true;
@@ -27,7 +22,7 @@ public class MoveAlongSpline: MonoBehaviour
     void Update()
     {
         if (!initCompleted) return;
-        var splineLength = container.CalculateLength();
+        var splineLength = container.CalculateLength(); // This might be expensive
         var maxSpeed = splineLength / timeToTravel;
         
         distancePercentage += maxSpeed * Time.deltaTime / splineLength;
@@ -35,12 +30,12 @@ public class MoveAlongSpline: MonoBehaviour
         Vector3 currentPosition = container.Spline.EvaluatePosition(distancePercentage);
         transform.position = currentPosition;
 
-        if (distancePercentage + directionStepSize > 1f)
+        if (distancePercentage + DirectionStepSize > 1f)
         {
             distancePercentage -= 1f;
         }
 
-        Vector3 nextPosition = container.EvaluatePosition(distancePercentage + directionStepSize);
+        Vector3 nextPosition = container.EvaluatePosition(distancePercentage + DirectionStepSize);
         Vector3 direction = nextPosition - currentPosition;
         transform.rotation = Quaternion.LookRotation(direction, transform.up);
     }
