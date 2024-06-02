@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Utils.GameEvents.Events;
 
 public class CountryRelation : MonoBehaviour
 {
@@ -43,7 +42,7 @@ public class CountryRelation : MonoBehaviour
                 removedInfoCategories.Contains(conn.infoCategory)
             ).ToList();
             // Notify connections of their removal
-            toRemoveConnections.ForEach(conn => conn.RemoveSelf());
+            toRemoveConnections.ForEach(conn => Destroy(conn.gameObject));
             // Remove connections from lists
             toRemoveConnections.ForEach(conn => connections.Remove(conn));
             var removedConnectionsCount = toRemoveConnections.Count;
@@ -192,8 +191,6 @@ public class CountryRelation : MonoBehaviour
             (float)(value / iCatMaxValue)
         );*/
         var splineThickness = 0.025f;
-
-        // TODO: Respect sibling connections in spline curvature
 
         conn.Init(
             fromCountryRenderer,
