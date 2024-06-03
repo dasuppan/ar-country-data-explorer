@@ -1,15 +1,22 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
 using UnityEngine;
+using Utils.GameEvents.Events;
+using Random = UnityEngine.Random;
 
 public class MainManager : UnitySingleton<MainManager>
 {
     [SerializeField] private List<CountryDefinitionSO> countryDefinitions = new();
+    [SerializeField] private CountryDefinitionSO undefinedCountryDefinition;
     [SerializeField] private List<InfoCategoryDefinitionSO> infoCategoryDefinitions = new();
     [SerializeField] public List<InfoCategory> activeInfoCategories = new();
 
-    private readonly List<Country> countries = new();
+    [SerializeField] private CountryRendererEvent countryRendererEditStartedEvent;
+
+    public readonly List<Country> countries = new();
+    public Country undefinedCountry { get; private set; }
 
     public Country GetCountryByName(string cName)
     {
@@ -23,11 +30,10 @@ public class MainManager : UnitySingleton<MainManager>
         countryRenderers
             .SelectMany(cRend => cRend.relations)
             .Distinct().ToList();
-
-    //private ARTrackedImageManager trackedImageManager;
-
+    
     void Start()
     {
+        undefinedCountry = new Country(undefinedCountryDefinition.countryName, undefinedCountryDefinition.flagSprite);
         // Instantiate countries
         countries.AddRange(
             countryDefinitions.Select(
@@ -37,6 +43,7 @@ public class MainManager : UnitySingleton<MainManager>
                 )
             )
         );
+        countries.Sort((c1, c2) => String.Compare(c1.countryName, c2.countryName, StringComparison.OrdinalIgnoreCase));
 
         // Parse CSV data
         foreach (var def in infoCategoryDefinitions)
@@ -71,7 +78,21 @@ public class MainManager : UnitySingleton<MainManager>
     public void OnCountryRendererAdded(CountryRenderer countryRenderer)
     {
         countryRenderers.Add(countryRenderer);
-        Debug.LogWarning($"Renderer for country {countryRenderer.country.countryName} was added!");
+        Debug.LogWarning($"New country {countryRenderer.country.countryName} was added!");
+        if (countryRenderer.country != undefinedCountry)
+        {
+            // Renderer was created with predefined country, treat as "change" (does hardly happen)
+            OnCountryRendererChanged(countryRenderer);
+        }
+        else
+        {
+            // Open country picker!
+            countryRendererEditStartedEvent.Raise(countryRenderer);
+        }
+    }
+
+    public void OnCountryRendererChanged(CountryRenderer countryRenderer)
+    {
         countryRenderers.ForEach(cRend => cRend.UpdateRelations());
         countryRelations.ForEach(cRel => cRel.ReEvaluate());
     }
@@ -80,8 +101,7 @@ public class MainManager : UnitySingleton<MainManager>
     {
         countryRenderers.Remove(countryRenderer);
         Debug.LogWarning($"Renderer for country {countryRenderer.country.countryName} was removed!");
-        countryRenderers.ForEach(cRend => cRend.UpdateRelations());
-        countryRelations.ForEach(cRel => cRel.ReEvaluate());
+        OnCountryRendererChanged(countryRenderer);
     }
 
     public Country GetRandomMissingCountry()

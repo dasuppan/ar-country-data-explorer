@@ -2,21 +2,21 @@ using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Utils.GameEvents.Events;
 
 public class CountryRenderer : MonoBehaviour
 {
     public Country country { get; private set; }
-    [SerializeField]
-    private CountryRelation countryRelationPrefab;
+    [SerializeField] private CountryRelation countryRelationPrefab;
 
     [SerializeField] private CountryDefinitionSO predefinedCountry;
-    
-    [SerializeField]
-    private CountryRendererEvent countryRendererAddedEvent;
-    [SerializeField]
-    private CountryRendererEvent countryRendererRemovedEvent;
-    
+
+    [SerializeField] private CountryRendererEvent countryRendererAddedEvent;
+    [SerializeField] private CountryRendererEvent countryRendererChangedEvent;
+    [SerializeField] private CountryRendererEvent countryRendererRemovedEvent;
+    [SerializeField] private CountryRendererEvent countryRendererEditStartedEvent;
+
     private SpriteRenderer spriteRenderer;
 
     public readonly List<CountryRelation> relations = new();
@@ -25,6 +25,21 @@ public class CountryRenderer : MonoBehaviour
         .SelectMany(cRel => new[] { cRel.countryRenderer1, cRel.countryRenderer2 })
         .Where(cRend => cRend != this)
         .ToList();
+
+    public void SetCountry(Country country, bool suppressChangedEvent = false)
+    {
+        if (this.country == country) return;
+        this.country = country;
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        spriteRenderer.sprite = this.country.flagSprite;
+        Debug.LogWarning(
+            $"Changing renderer to country {this.country.countryName} with {this.country.data.Count} data points.");
+        RemoveAllRelations();
+        if (!suppressChangedEvent)
+        {
+            countryRendererChangedEvent.Raise(this);
+        }
+    }
 
     public void UpdateRelations()
     {
@@ -44,10 +59,10 @@ public class CountryRenderer : MonoBehaviour
             cRenderer.relations.Add(createdRelation);
             addedRelationsCount++;
         }
-        
+
         Debug.LogWarning(
             $"Relations updated for cRenderer ({ToString()}):" +
-            $"\nRelations added: {addedRelationsCount}"
+            $"\nRelations added/retrieved: {addedRelationsCount}"
             /*$"\nRelations removed: {removedConnectionsCount}"*/
         );
     }
@@ -56,61 +71,59 @@ public class CountryRenderer : MonoBehaviour
     {
         if (relations.Exists(cRel => cRel.Concerns(this, toCountryRenderer)))
         {
-            // TODO: This case will occur often, we should not log this
-            Debug.LogWarning(
+            Debug.LogError(
                 $"There already exists a relation that deals with the connections between {country.countryName} and {toCountryRenderer.country}! Aborting...");
             return null;
         }
-        
+
         var countryRelationGo = Instantiate(countryRelationPrefab, Vector3.zero, Quaternion.identity);
         var cRel = countryRelationGo.GetComponent<CountryRelation>();
         cRel.Init(this, toCountryRenderer);
-        
         return cRel;
     }
 
-    void Start()
+    private void Start()
     {
         if (predefinedCountry != null)
         {
-            Debug.LogWarning(
-                "$Country Renderer was instantiated with predefined country, skipping reference image comparison...");
             country = MainManager.Instance.GetCountryByName(predefinedCountry.name);
+            if (country == null)
+            {
+                Debug.LogWarning("Predefined country not found. Setting to undefined country...");
+                country = MainManager.Instance.undefinedCountry;
+            }
         }
         else
         {
-            
-            /*var trackedImage = GetComponent<ARTrackedImage>();
-            country = MainManager.Instance.GetCountryByReferenceImageName(
-                trackedImage.referenceImage.name
-            );*/
-            country = MainManager.Instance.GetRandomMissingCountry();
-            // TODO: Handle null case
+            country = MainManager.Instance.undefinedCountry;
         }
 
-        if (country != null)
-        {
-            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-            spriteRenderer.sprite = country.flagSprite;
-            Debug.LogWarning($"Adding country {country.countryName}");
-            Debug.LogWarning($"Country {country.countryName} has {country.data.Count} data points.");
-            countryRendererAddedEvent.Raise(this);
-        }
-        else
-        {
-            // TODO: Should never happen actually
-            Debug.LogWarning("No country found for tracker. Renderer is idling...");
-        }
+        SetCountry(country, true);
+        countryRendererAddedEvent.Raise(this);
     }
-    
+
+    private void RemoveAllRelations()
+    {
+        relations.ForEach(cRel => cRel.RemoveSelf());
+        // Next line should theoretically not be necessary, as relation raises relationRemovedEvent,
+        // which calls OnCountryRelationRemoved, but we play it safe
+        relations.Clear();
+    }
+
     public void RemoveSelf()
     {
+        RemoveAllRelations();
         countryRendererRemovedEvent.Raise(this);
         Destroy(gameObject);
     }
-    
+
     public void OnCountryRelationRemoved(CountryRelation countryRelation)
     {
         relations.Remove(countryRelation);
+    }
+
+    public void OnEditButtonPressed()
+    {
+        countryRendererEditStartedEvent.Raise(this);
     }
 }

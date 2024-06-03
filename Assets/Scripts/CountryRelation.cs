@@ -1,12 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Utils.GameEvents.Events;
 
 public class CountryRelation : MonoBehaviour
 {
-    [SerializeField] private GameObject countryConnectionRendererPrefab;
     public CountryRenderer countryRenderer1;
     public CountryRenderer countryRenderer2;
+    [SerializeField] private GameObject countryConnectionRendererPrefab;
+    [SerializeField] private CountryRelationEvent countryRelationRemovedEvent; 
 
     private readonly List<CountryConnection> connections = new();
 
@@ -88,14 +90,26 @@ public class CountryRelation : MonoBehaviour
             );
     }
 
+    /*public void OnCountryRendererChanged(CountryRenderer countryRenderer)
+    {
+        if (countryRenderer1 == countryRenderer || countryRenderer2 == countryRenderer)
+        {
+            Debug.LogWarning(
+                $"Relation {gameObject.name} invalidated due to renderer change! Removing...");
+            countryRelationRemovedEvent.Raise(this);
+            Destroy(gameObject);
+        }
+    }
+
     public void OnCountryRendererRemoved(CountryRenderer countryRenderer)
     {
         if (countryRenderer1 == countryRenderer || countryRenderer2 == countryRenderer)
         {
             Debug.LogWarning($"Removing relation {gameObject.name} due to removed renderer for country {countryRenderer.country.countryName}!");
+            countryRelationRemovedEvent.Raise(this);
             Destroy(gameObject);
         }
-    }
+    }*/
 
     private CountryConnection CreateNewConnection(
         CountryRenderer fromCountryRenderer,
@@ -139,6 +153,12 @@ public class CountryRelation : MonoBehaviour
         );
 
         return conn;
+    }
+
+    public void RemoveSelf()
+    {
+        countryRelationRemovedEvent.Raise(this);
+        Destroy(gameObject);
     }
 
     public override string ToString()
