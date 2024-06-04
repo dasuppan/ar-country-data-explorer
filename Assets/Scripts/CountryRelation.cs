@@ -99,7 +99,7 @@ public class CountryRelation : MonoBehaviour
             countryRelationRemovedEvent.Raise(this);
             Destroy(gameObject);
         }
-    }
+    }*/
 
     public void OnCountryRendererRemoved(CountryRenderer countryRenderer)
     {
@@ -109,7 +109,7 @@ public class CountryRelation : MonoBehaviour
             countryRelationRemovedEvent.Raise(this);
             Destroy(gameObject);
         }
-    }*/
+    }
 
     private CountryConnection CreateNewConnection(
         CountryRenderer fromCountryRenderer,

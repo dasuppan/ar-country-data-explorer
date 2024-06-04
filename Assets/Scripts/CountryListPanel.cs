@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using Utils.GameEvents.Events;
 
 public class CountryListPanel : MonoBehaviour
 {
@@ -43,7 +42,8 @@ public class CountryListPanel : MonoBehaviour
         Debug.LogWarning($"Picked country {country.countryName}!");
         if (currentCountryRenderer == null)
         {
-            Debug.LogWarning($"Country {country.countryName} was picked, but current cRenderer is null! Ignoring...");
+            Debug.LogError($"Current cRenderer is null! Ignoring country pick...");
+            gameObject.SetActive(false);
             return;
         }
 

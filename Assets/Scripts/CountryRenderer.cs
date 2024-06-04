@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Utils.GameEvents.Events;
 
 public class CountryRenderer : MonoBehaviour
@@ -13,9 +12,9 @@ public class CountryRenderer : MonoBehaviour
     [SerializeField] private CountryDefinitionSO predefinedCountry;
 
     [SerializeField] private CountryRendererEvent countryRendererAddedEvent;
-    [SerializeField] private CountryRendererEvent countryRendererChangedEvent;
     [SerializeField] private CountryRendererEvent countryRendererRemovedEvent;
     [SerializeField] private CountryRendererEvent countryRendererEditStartedEvent;
+    
 
     private SpriteRenderer spriteRenderer;
 
@@ -26,19 +25,23 @@ public class CountryRenderer : MonoBehaviour
         .Where(cRend => cRend != this)
         .ToList();
 
-    public void SetCountry(Country country, bool suppressChangedEvent = false)
+    public void SetCountry(Country country, bool suppressRemovedEvent = false)
     {
         if (this.country == country) return;
+        if (!suppressRemovedEvent)
+        {
+            countryRendererRemovedEvent.Raise(this);
+        }
         this.country = country;
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         spriteRenderer.sprite = this.country.flagSprite;
         Debug.LogWarning(
             $"Changing renderer to country {this.country.countryName} with {this.country.data.Count} data points.");
-        RemoveAllRelations();
-        if (!suppressChangedEvent)
+        countryRendererAddedEvent.Raise(this);
+        /*if (!suppressChangedEvent)
         {
             countryRendererChangedEvent.Raise(this);
-        }
+        }*/
     }
 
     public void UpdateRelations()
@@ -84,35 +87,35 @@ public class CountryRenderer : MonoBehaviour
 
     private void Start()
     {
+        Country c;
         if (predefinedCountry != null)
         {
-            country = MainManager.Instance.GetCountryByName(predefinedCountry.name);
-            if (country == null)
+            c = MainManager.Instance.GetCountryByName(predefinedCountry.name);
+            if (c == null)
             {
                 Debug.LogWarning("Predefined country not found. Setting to undefined country...");
-                country = MainManager.Instance.undefinedCountry;
+                c = MainManager.Instance.undefinedCountry;
             }
         }
         else
         {
-            country = MainManager.Instance.undefinedCountry;
+            c = MainManager.Instance.undefinedCountry;
         }
 
-        SetCountry(country, true);
-        countryRendererAddedEvent.Raise(this);
+        SetCountry(c, true);
     }
 
-    private void RemoveAllRelations()
+    /*private void RemoveAllRelations()
     {
         relations.ForEach(cRel => cRel.RemoveSelf());
         // Next line should theoretically not be necessary, as relation raises relationRemovedEvent,
         // which calls OnCountryRelationRemoved, but we play it safe
         relations.Clear();
-    }
+    }*/
 
     public void RemoveSelf()
     {
-        RemoveAllRelations();
+        /*RemoveAllRelations();*/
         countryRendererRemovedEvent.Raise(this);
         Destroy(gameObject);
     }

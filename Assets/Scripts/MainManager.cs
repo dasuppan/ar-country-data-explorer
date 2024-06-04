@@ -91,7 +91,7 @@ public class MainManager : UnitySingleton<MainManager>
         }
     }
 
-    public void OnCountryRendererChanged(CountryRenderer countryRenderer)
+    private void OnCountryRendererChanged(CountryRenderer countryRenderer)
     {
         countryRenderers.ForEach(cRend => cRend.UpdateRelations());
         countryRelations.ForEach(cRel => cRel.ReEvaluate());
