@@ -10,7 +10,7 @@ public class MainManager : UnitySingleton<MainManager>
 {
     [SerializeField] private List<CountryDefinitionSO> countryDefinitions = new();
     [SerializeField] private CountryDefinitionSO undefinedCountryDefinition;
-    [SerializeField] private List<InfoCategoryDefinitionSO> infoCategoryDefinitions = new();
+    [SerializeField] public List<InfoCategoryDefinitionSO> infoCategoryDefinitions = new();
     [SerializeField] public List<InfoCategory> activeInfoCategories = new();
 
     [SerializeField] private CountryRendererEvent countryRendererEditStartedEvent;
