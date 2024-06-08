@@ -4,7 +4,8 @@ using UnityEngine;
 public enum InfoCategory
 {
     IMPORT_TO_AUSTRIA,
-    EXPORT_FROM_AUSTRIA
+    EXPORT_FROM_AUSTRIA,
+    MIGRATION_2015_2020
 }
 
 namespace ScriptableObjects.Countries

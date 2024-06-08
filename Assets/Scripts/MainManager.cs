@@ -30,7 +30,7 @@ public class MainManager : UnitySingleton<MainManager>
         countryRenderers
             .SelectMany(cRend => cRend.relations)
             .Distinct().ToList();
-    
+
     void Start()
     {
         undefinedCountry = new Country(undefinedCountryDefinition.countryName, undefinedCountryDefinition.flagSprite);
@@ -51,8 +51,11 @@ public class MainManager : UnitySingleton<MainManager>
             foreach (var fileConfig in def.fileConfigs)
             {
                 // TODO: Respect max value set by previously processed file configs
-                DataFileConfigSO.ProcessFile(fileConfig, countries, fileConfig.country, def.category,
-                    out var relevantCountriesMaxValue);
+                fileConfig.ProcessFile(
+                    countries,
+                    def.category,
+                    out var relevantCountriesMaxValue
+                );
                 infoCategoryMaxValues[def.category] = relevantCountriesMaxValue;
             }
         }
