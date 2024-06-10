@@ -26,22 +26,17 @@ public class ManyToManyDataFileConfigSO : DataFileConfigSO
         int tableRowCount = data.Length / colCount - 1;
         for (int i = 0; i < tableRowCount; i++)
         {
-            string sourceCountryName = data[colCount * country1NameIndex];
+            string sourceCountryName = data[colCount * (i + 1) + country1NameIndex];
             Country sourceCountry = countries.FirstOrDefault(c => c.countryName == sourceCountryName);
             if (sourceCountry == null) continue;
-            string destCountryName = data[colCount * (i + country2NameIndex)];
+            string destCountryName = data[colCount * (i + 1) + country2NameIndex];
             Country destCountry = countries.FirstOrDefault(c => c.countryName == destCountryName);
             if (destCountry == null) continue;
-            double countryValue = double.Parse(data[colCount * (i + countryValueIndex)]);
+            // Ignore country self-referencing themselves
+            if (sourceCountry == destCountry) continue;
             
+            double countryValue = double.Parse(data[colCount * (i + 1) + countryValueIndex]);
             relevantCountriesMaxValue = Math.Max(relevantCountriesMaxValue, countryValue);
-            
-            if (sourceCountry == destCountry)
-            {
-                Debug.LogWarning(
-                    $"File ${csvFile.name} makes country self-reference (${sourceCountry.countryName})! Ignoring...");
-                continue;
-            }
 
             if (!sourceCountry.data.ContainsKey(destCountry))
             {
