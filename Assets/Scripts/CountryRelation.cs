@@ -31,7 +31,7 @@ public class CountryRelation : MonoBehaviour
         gameObject.name = ToString();
     }
 
-    public void ReEvaluate()
+    public void UpdateConnections()
     {
         var theirsInfoCategories = MainManager.Instance.activeInfoCategories;
             var oursInfoCategories =

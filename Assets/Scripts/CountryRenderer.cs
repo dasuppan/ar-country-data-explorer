@@ -44,7 +44,7 @@ public class CountryRenderer : MonoBehaviour
         }*/
     }
 
-    public void UpdateRelations()
+    public void AddMissingRelations()
     {
         var theirsCountryRenderers = MainManager.Instance.countryRenderers;
         var ourCountryRenderers = relatedCountryRenderers;

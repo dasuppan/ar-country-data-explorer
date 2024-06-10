@@ -85,7 +85,7 @@ public class MainManager : UnitySingleton<MainManager>
         if (countryRenderer.country != undefinedCountry)
         {
             // Renderer was created with predefined country, treat as "change" (does hardly happen)
-            OnCountryRendererChanged(countryRenderer);
+            UpdateGraph();
         }
         else
         {
@@ -94,20 +94,27 @@ public class MainManager : UnitySingleton<MainManager>
         }
     }
 
-    private void OnCountryRendererChanged(CountryRenderer countryRenderer)
+    private void UpdateGraph()
     {
-        countryRenderers.ForEach(cRend => cRend.UpdateRelations());
-        countryRelations.ForEach(cRel => cRel.ReEvaluate());
+        countryRenderers.ForEach(cRend => cRend.AddMissingRelations());
+        countryRelations.ForEach(cRel => cRel.UpdateConnections());
     }
 
     public void OnCountryRendererRemoved(CountryRenderer countryRenderer)
     {
         countryRenderers.Remove(countryRenderer);
         Debug.LogWarning($"Renderer for country {countryRenderer.country.countryName} was removed!");
-        OnCountryRendererChanged(countryRenderer);
+        UpdateGraph();
     }
 
-    public Country GetRandomMissingCountry()
+    public void OnInfoCategoriesChanged(List<InfoCategory> infoCategories)
+    {
+        activeInfoCategories.Clear();
+        activeInfoCategories.AddRange(infoCategories);
+        UpdateGraph();
+    }
+
+    /*public Country GetRandomMissingCountry()
     {
         var availableCountries = countries.Except(countryRenderers.Select(cRend => cRend.country)).ToList();
 
@@ -118,5 +125,5 @@ public class MainManager : UnitySingleton<MainManager>
         }
 
         return availableCountries[Random.Range(0, availableCountries.Count)];
-    }
+    }*/
 }

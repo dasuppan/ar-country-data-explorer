@@ -16,4 +16,9 @@ public class CanvasManager : MonoBehaviour
     {
         infoCategoryListPanelGo.SetActive(true);
     }
+
+    public void CloseAllUIPanels() {
+        countryListPanelGo.SetActive(false);
+        infoCategoryListPanelGo.SetActive(false);
+    }
 }

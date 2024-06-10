@@ -1,13 +1,18 @@
 using System;
+using System.Linq;
 using ScriptableObjects.Countries;
 using UnityEngine;
+using UnityEngine.InputSystem.XR;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
+using Utils.GameEvents.Events;
 
 public class InfoCategoryListPanel : MonoBehaviour
 {
     [SerializeField] private RectTransform root;
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private GameObject listEntryPrefab;
+    [SerializeField] private InfoCategoriesEvent infoCategoriesPickedEvent;
     
     private void OnEnable()
     {
@@ -25,24 +30,19 @@ public class InfoCategoryListPanel : MonoBehaviour
             listEntry.Title.SetText(catDef.categoryName);
             listEntry.InfoCategory = catDef.category;
             listEntry.Image.color = catDef.splineMaterial.color;
+            listEntry.SetTicked(MainManager.Instance.activeInfoCategories.Contains(catDef.category));
         }
     }
 
-    /*public void OnCountryPicked(Country country)
+    public void ApplyChanges()
     {
-        Debug.LogWarning($"Picked country {country.countryName}!");
-        if (currentCountryRenderer == null)
-        {
-            Debug.LogError($"Current cRenderer is null! Ignoring country pick...");
-            gameObject.SetActive(false);
-            return;
-        }
-
-        currentCountryRenderer.SetCountry(country);
-        currentCountryRenderer = null;
-        
-        gameObject.SetActive(false);
-    }*/
+        var infoCategories = GetComponentsInChildren<InfoCategoryListEntry>()
+            .Where(e => e.Ticked)
+            .Select(e => e.InfoCategory)
+            .ToList();
+        Debug.LogWarning($"Picked info categories {infoCategories.ToArray()}!");
+        infoCategoriesPickedEvent.Raise(infoCategories);
+    }
     
     private void ClearScrollContent()
     {
