@@ -2,7 +2,7 @@
 using GameDesignGame.Utility.GameEvents.Listeners;
 using UnityEngine;
 
-namespace GameDesignGame.Utility.GameEvents
+namespace Utils.GameEvents
 {
     public class BaseGameEvent<T> : ScriptableObject
     {

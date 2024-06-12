@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="InfoCategoryItem" style="flex-direction: row; padding-bottom: 20px;">
+        <ui:VisualElement name="InfoCategoryMaterial" style="background-image: none; background-color: rgb(255, 75, 26); width: 90px; height: 90px; flex-shrink: 0; align-self: center;" />
+        <ui:Label tabindex="-1" text="Category 2024" parse-escape-sequences="true" display-tooltip-when-elided="true" name="InfoCategoryName" style="-unity-font-style: bold; height: auto; margin-bottom: 0; margin-top: 0; margin-right: 0; padding-top: 6px; -unity-text-align: middle-left; margin-left: 8px; font-size: 30px; justify-content: flex-start; align-items: stretch; align-self: center; color: rgb(255, 255, 255); white-space: normal; width: auto; min-width: 0; flex-shrink: 1; flex-grow: 1;" />
+        <ui:Toggle name="InfoCategoryToggle" style="padding-top: 10px; padding-right: 10px; padding-bottom: 10px; padding-left: 10px; align-self: center;" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,22 +1,27 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+using GameDesignGame.Utility.GameEvents.Events;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Utils.GameEvents.Events;
 
-public class ChangeCountryMenuManager : MonoBehaviour
+public class MainMenuManager : MonoBehaviour
 {
     private UIDocument document;
-    [SerializeField] private VisualTreeAsset countryItem;
-
+    [SerializeField] private VoidEvent resetRequestedEvent;
+    [SerializeField] private VoidEvent infoCategoriesEditStartedEvent;
+    
     private void Awake()
     {
         document = GetComponent<UIDocument>();
     }
 
-    private CountryRenderer currentCountryRenderer;
+    private void Start()
+    {
+        document.enabled = true;
+        document.rootVisualElement.Q<Button>("ResetButton").clicked += () => resetRequestedEvent.Raise();
+        document.rootVisualElement.Q<Button>("DataButton").clicked += () => infoCategoriesEditStartedEvent.Raise();
+    }
+
+    /*private CountryRenderer currentCountryRenderer;
 
     public void OnCountryRendererEditStarted(CountryRenderer countryRenderer)
     {
@@ -28,9 +33,8 @@ public class ChangeCountryMenuManager : MonoBehaviour
             var country = MainManager.Instance.countries[i];
             cItem.Q<VisualElement>("CountryFlag").style.backgroundImage = new StyleBackground(country.flagSprite);
             cItem.Q<Label>("CountryName").text = country.countryName;
-            // This is cursed, when the re-binding occurs the old event handlers will still be there
             var btn = cItem.Q<Button>("CountryItem");
-            btn.clickable = null;
+            /*btn.clickable = null;#1#
             btn.clicked += () => OnCountryClicked(country);
         };
         ListView countryList = document.rootVisualElement
@@ -52,5 +56,5 @@ public class ChangeCountryMenuManager : MonoBehaviour
         Debug.LogWarning($"Selection changed to ${country.countryName}");
         document.enabled = false;
         currentCountryRenderer.SetCountry(country);
-    }
+    }*/
 }

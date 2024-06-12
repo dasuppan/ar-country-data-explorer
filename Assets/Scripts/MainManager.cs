@@ -68,7 +68,7 @@ public class MainManager : UnitySingleton<MainManager>
         return infoCategoryDefinitions.FirstOrDefault(def => def.category == infoCategory);
     }
 
-    public double GetMaxValueForInfoCategory(InfoCategory infoCategory)
+    /*public double GetMaxValueForInfoCategory(InfoCategory infoCategory)
     {
         var iCatDef = GetInfoCategoryDefinition(infoCategory);
         var relCategories = iCatDef.connectionThicknessRelativeTo.Intersect(activeInfoCategories);
@@ -76,7 +76,7 @@ public class MainManager : UnitySingleton<MainManager>
             .Where(pair => relCategories.Contains(pair.Key))
             .Select(pair => pair.Value);
         return relMaxValues.Max();
-    }
+    }*/
 
     public void OnCountryRendererAdded(CountryRenderer countryRenderer)
     {
@@ -109,6 +109,7 @@ public class MainManager : UnitySingleton<MainManager>
 
     public void OnInfoCategoriesChanged(List<InfoCategory> infoCategories)
     {
+        Debug.LogWarning("Received signal!"); // TODO: Continue here
         activeInfoCategories.Clear();
         activeInfoCategories.AddRange(infoCategories);
         UpdateGraph();
@@ -126,4 +127,16 @@ public class MainManager : UnitySingleton<MainManager>
 
         return availableCountries[Random.Range(0, availableCountries.Count)];
     }*/
+
+    public void OnResetRequested()
+    {
+        countryRenderers.ForEach(cRend => cRend.RemoveSelf());
+        countryRenderers.Clear();
+        activeInfoCategories.Clear();
+        activeInfoCategories.AddRange(
+            infoCategoryDefinitions
+                .Select(iCatDef => iCatDef.category)
+        );
+        UpdateGraph();
+    }
 }
