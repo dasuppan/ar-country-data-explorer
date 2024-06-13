@@ -96,12 +96,18 @@ public class MainManager : UnitySingleton<MainManager>
             countryRendererEditStartedEvent.Raise(countryRenderer);
         }
     }
+    
+    public void UpdateARPlacementInteractableState(bool countryRendererSelected)
+    {
+        GetComponent<ARPlacementInteractable>().enabled = 
+            !countryRendererSelected && availableCountries.Count > 0;
+    }
 
     private void UpdateGraph()
     {
         countryRenderers.ForEach(cRend => cRend.AddMissingRelations());
         countryRelations.ForEach(cRel => cRel.UpdateConnections());
-        GetComponent<ARPlacementInteractable>().enabled = availableCountries.Count > 0;
+        UpdateARPlacementInteractableState(false);
     }
 
     public void OnCountryRendererRemoved(CountryRenderer countryRenderer)

@@ -8,12 +8,14 @@ public class MoveAlongSpline: MonoBehaviour
     public SplineContainer container;
     public float timeToTravel = 1f;
     private float distancePercentage = 0f;
+    private Vector2 range;
     
     public void Init(SplineContainer container, float startOffset, float timeToTravel = 1f)
     {
         this.container = container;
         this.timeToTravel = timeToTravel;
-        distancePercentage = startOffset;
+        range = GetComponentInParent<SplineExtrude>().Range;
+        distancePercentage = Mathf.Lerp(range.x, range.y, startOffset);;
         initCompleted = true;
     }
 
@@ -26,13 +28,14 @@ public class MoveAlongSpline: MonoBehaviour
         var maxSpeed = splineLength / timeToTravel;
         
         distancePercentage += maxSpeed * Time.deltaTime / splineLength;
+        distancePercentage = Mathf.Clamp(distancePercentage, range.x, range.y);
 
         Vector3 currentPosition = container.Spline.EvaluatePosition(distancePercentage);
         transform.position = currentPosition;
 
-        if (distancePercentage + DirectionStepSize > 1f)
+        if (distancePercentage + DirectionStepSize > range.y)
         {
-            distancePercentage -= 1f;
+            distancePercentage = range.x;
         }
 
         Vector3 nextPosition = container.EvaluatePosition(distancePercentage + DirectionStepSize);
