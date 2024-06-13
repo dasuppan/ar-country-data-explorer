@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
 using UnityEngine;
+using UnityEngine.XR.ARFoundation;
 using Utils.GameEvents.Events;
-using Random = UnityEngine.Random;
 
 public class MainManager : UnitySingleton<MainManager>
 {
+    [SerializeField] private ARSession arSession;
     [SerializeField] private List<CountryDefinitionSO> countryDefinitions = new();
     [SerializeField] private CountryDefinitionSO undefinedCountryDefinition;
     [SerializeField] public List<InfoCategoryDefinitionSO> infoCategoryDefinitions = new();
-    [SerializeField] public List<InfoCategory> activeInfoCategories = new();
+    public HashSet<InfoCategory> activeInfoCategories = new();
 
     [SerializeField] private CountryRendererEvent countryRendererEditStartedEvent;
 
@@ -58,6 +59,8 @@ public class MainManager : UnitySingleton<MainManager>
                 );
                 infoCategoryMaxValues[def.category] = relevantCountriesMaxValue;
             }
+
+            activeInfoCategories.Add(def.category);
         }
 
         Debug.LogWarning("MainManager initialized.");
@@ -109,9 +112,10 @@ public class MainManager : UnitySingleton<MainManager>
 
     public void OnInfoCategoriesChanged(List<InfoCategory> infoCategories)
     {
-        Debug.LogWarning("Received signal!"); // TODO: Continue here
+        /*Debug.LogWarning($"Received signal! new inf cat:");
+        infoCategories.ForEach(iCat => Debug.LogWarning(iCat));*/
         activeInfoCategories.Clear();
-        activeInfoCategories.AddRange(infoCategories);
+        infoCategories.ForEach(iCat => activeInfoCategories.Add(iCat));
         UpdateGraph();
     }
 
@@ -130,13 +134,15 @@ public class MainManager : UnitySingleton<MainManager>
 
     public void OnResetRequested()
     {
-        countryRenderers.ForEach(cRend => cRend.RemoveSelf());
+        // Using this structure because we are modifying the collection in the loop
+        for (int i = countryRenderers.Count - 1; i >= 0; i--)
+        {
+            countryRenderers[i].RemoveSelf();
+        }
         countryRenderers.Clear();
         activeInfoCategories.Clear();
-        activeInfoCategories.AddRange(
-            infoCategoryDefinitions
-                .Select(iCatDef => iCatDef.category)
-        );
-        UpdateGraph();
+        infoCategoryDefinitions.ForEach(def => activeInfoCategories.Add(def.category));
+        arSession.Reset();
+        //UpdateGraph(); // This should not be necessary
     }
 }

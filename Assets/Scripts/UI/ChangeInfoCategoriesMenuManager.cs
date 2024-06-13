@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Utils.GameEvents.Events;
@@ -17,7 +18,7 @@ namespace UI
             document = GetComponent<UIDocument>();
         }
     
-        private List<InfoCategory> localActiveInfoCategories = new();
+        private readonly HashSet<InfoCategory> localActiveInfoCategories = new();
 
         private void OnToggleValueChanged(ChangeEvent<bool> value, InfoCategory infoCategory)
         {
@@ -29,9 +30,8 @@ namespace UI
             {
                 localActiveInfoCategories.Remove(infoCategory);
             }
-            Debug.LogWarning("Updated");
-
-            infoCategoriesUpdatedEvent.Raise(localActiveInfoCategories);
+            /*Debug.LogWarning($"Updated {infoCategory} to {value.newValue}");*/
+            infoCategoriesUpdatedEvent.Raise(localActiveInfoCategories.ToList());
         }
 
         [ContextMenu("Naturally open!")]
@@ -39,8 +39,11 @@ namespace UI
         {
             document.enabled = true;
             localActiveInfoCategories.Clear();
-            localActiveInfoCategories.AddRange(MainManager.Instance.activeInfoCategories);
-        
+            MainManager.Instance.activeInfoCategories.ToList()
+                .ForEach(iCat => localActiveInfoCategories.Add(iCat));
+            /*Debug.LogWarning("Current global active info categories:");
+            localActiveInfoCategories.ToList().ForEach(iCat => Debug.LogWarning(iCat));*/
+            
             Func<VisualElement> makeItem = () => infoCategoryItem.CloneTree().Q<VisualElement>("InfoCategoryItem");
             Action<VisualElement, int> bindItem = (cItem, i) =>
             {

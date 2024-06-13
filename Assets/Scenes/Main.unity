@@ -5381,6 +5381,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1053648618385024, guid: 7a6cffe60d286d343832c282d6ce9ce5, type: 3}
+      propertyPath: arSession
+      value: 
+      objectReference: {fileID: 1895355337}
+    - target: {fileID: 1053648618385024, guid: 7a6cffe60d286d343832c282d6ce9ce5, type: 3}
       propertyPath: countryPickerMenu
       value: 
       objectReference: {fileID: 0}

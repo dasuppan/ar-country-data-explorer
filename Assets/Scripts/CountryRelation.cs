@@ -43,6 +43,7 @@ public class CountryRelation : MonoBehaviour
             var toRemoveConnections = connections.Where(conn =>
                 removedInfoCategories.Contains(conn.infoCategory)
             ).ToList();
+            Debug.LogWarning($"To remove connections: {toRemoveConnections.Count}");
             // Notify connections of their removal
             toRemoveConnections.ForEach(conn => Destroy(conn.gameObject));
             // Remove connections from lists
