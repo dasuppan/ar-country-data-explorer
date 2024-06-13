@@ -16,11 +16,9 @@ public class ManyToManyDataFileConfigSO : DataFileConfigSO
 
     public override void ProcessFile(
         List<Country> countries,
-        InfoCategory targetInfoCategory,
-        out double relevantCountriesMaxValue
+        InfoCategory targetInfoCategory
     )
     {
-        relevantCountriesMaxValue = 0;
         // Assumes same format for all file types
         string[] data = csvFile.text.Split(new[] { ";", "\n" }, StringSplitOptions.None);
         int tableRowCount = data.Length / colCount - 1;
@@ -36,7 +34,6 @@ public class ManyToManyDataFileConfigSO : DataFileConfigSO
             if (sourceCountry == destCountry) continue;
             
             double countryValue = double.Parse(data[colCount * (i + 1) + countryValueIndex]);
-            relevantCountriesMaxValue = Math.Max(relevantCountriesMaxValue, countryValue);
 
             if (!sourceCountry.data.ContainsKey(destCountry))
             {

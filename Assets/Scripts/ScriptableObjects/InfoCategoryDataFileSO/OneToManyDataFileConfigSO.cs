@@ -28,11 +28,9 @@ namespace ScriptableObjects.InfoCategoryDataFileSO
 
         public override void ProcessFile(
             List<Country> countries,
-            InfoCategory targetInfoCategory,
-            out double relevantCountriesMaxValue
+            InfoCategory targetInfoCategory
         )
         {
-            relevantCountriesMaxValue = 0;
             // Assumes same format for all file types
             string[] data = csvFile.text.Split(new[] { ";", "\n" }, StringSplitOptions.None);
             int tableRowCount = data.Length / colCount - 1;
@@ -50,7 +48,6 @@ namespace ScriptableObjects.InfoCategoryDataFileSO
 
                 Country dataCountry = countries.FirstOrDefault(c => c.countryName == countryName);
                 if (dataCountry == null) continue;
-                relevantCountriesMaxValue = Math.Max(relevantCountriesMaxValue, countryValue);
 
                 if (interpretationMode ==
                     DataInterpretationMode.COUNTRY_TO_MANY) // e.g. EXPORTS FROM AUSTRIA

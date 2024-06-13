@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -20,10 +22,16 @@ namespace UI
         {
             currentCountryRenderer = countryRenderer;
             document.enabled = true;
+            List<Country> availableCountries = new();
+            if (currentCountryRenderer.country != MainManager.Instance.undefinedCountry)
+            {
+                availableCountries.Add(countryRenderer.country);
+            }
+            availableCountries.AddRange(MainManager.Instance.availableCountries);
             Func<VisualElement> makeItem = () => countryItem.CloneTree().Q<VisualElement>("CountryItem");
             Action<VisualElement, int> bindItem = (cItem, i) =>
             {
-                var country = MainManager.Instance.countries[i];
+                var country = availableCountries[i];
                 cItem.Q<VisualElement>("CountryFlag").style.backgroundImage = new StyleBackground(country.flagSprite);
                 cItem.Q<Label>("CountryName").text = country.countryName;
                 var btn = cItem.Q<Button>("CountryItem");
@@ -36,7 +44,7 @@ namespace UI
             countryList.fixedItemHeight = 120;
             countryList.makeItem = makeItem;
             countryList.bindItem = bindItem;
-            countryList.itemsSource = MainManager.Instance.countries;
+            countryList.itemsSource = availableCountries;
             if (currentCountryRenderer.country != MainManager.Instance.undefinedCountry)
             {
                 countryList.selectedIndex =  MainManager.Instance.countries.IndexOf(currentCountryRenderer.country);

@@ -7,7 +7,6 @@ public abstract class DataFileConfigSO : ScriptableObject
 
     public abstract void ProcessFile(
         List<Country> countries,
-        InfoCategory targetInfoCategory,
-        out double relevantCountriesMaxValue
+        InfoCategory targetInfoCategory
     );
 }

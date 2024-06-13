@@ -4,6 +4,7 @@ using System.Linq;
 using ScriptableObjects.Countries;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.Interaction.Toolkit.AR;
 using Utils.GameEvents.Events;
 
 public class MainManager : UnitySingleton<MainManager>
@@ -17,6 +18,9 @@ public class MainManager : UnitySingleton<MainManager>
     [SerializeField] private CountryRendererEvent countryRendererEditStartedEvent;
 
     public readonly List<Country> countries = new();
+    public List<Country> availableCountries => countries.Except(
+        countryRenderers.Select(cRend => cRend.country)
+        ).ToList();
     public Country undefinedCountry { get; private set; }
 
     public Country GetCountryByName(string cName)
@@ -25,7 +29,6 @@ public class MainManager : UnitySingleton<MainManager>
     }
 
     public readonly List<CountryRenderer> countryRenderers = new();
-    private readonly Dictionary<InfoCategory, double> infoCategoryMaxValues = new();
 
     private List<CountryRelation> countryRelations =>
         countryRenderers
@@ -51,13 +54,10 @@ public class MainManager : UnitySingleton<MainManager>
         {
             foreach (var fileConfig in def.fileConfigs)
             {
-                // TODO: Respect max value set by previously processed file configs
                 fileConfig.ProcessFile(
                     countries,
-                    def.category,
-                    out var relevantCountriesMaxValue
+                    def.category
                 );
-                infoCategoryMaxValues[def.category] = relevantCountriesMaxValue;
             }
 
             activeInfoCategories.Add(def.category);
@@ -101,6 +101,7 @@ public class MainManager : UnitySingleton<MainManager>
     {
         countryRenderers.ForEach(cRend => cRend.AddMissingRelations());
         countryRelations.ForEach(cRel => cRel.UpdateConnections());
+        GetComponent<ARPlacementInteractable>().enabled = availableCountries.Count > 0;
     }
 
     public void OnCountryRendererRemoved(CountryRenderer countryRenderer)
@@ -119,19 +120,6 @@ public class MainManager : UnitySingleton<MainManager>
         UpdateGraph();
     }
 
-    /*public Country GetRandomMissingCountry()
-    {
-        var availableCountries = countries.Except(countryRenderers.Select(cRend => cRend.country)).ToList();
-
-        if (availableCountries.Count == 0)
-        {
-            Debug.LogWarning("No more countries to add!");
-            return null;
-        }
-
-        return availableCountries[Random.Range(0, availableCountries.Count)];
-    }*/
-
     public void OnResetRequested()
     {
         // Using this structure because we are modifying the collection in the loop
@@ -142,7 +130,9 @@ public class MainManager : UnitySingleton<MainManager>
         countryRenderers.Clear();
         activeInfoCategories.Clear();
         infoCategoryDefinitions.ForEach(def => activeInfoCategories.Add(def.category));
+        GetComponent<ARPlacementInteractable>().enabled = true;
         arSession.Reset();
+        
         //UpdateGraph(); // This should not be necessary
     }
 }
