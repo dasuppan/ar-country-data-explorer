@@ -13,16 +13,17 @@ public class MainManager : UnitySingleton<MainManager>
     [SerializeField] private List<CountryDefinitionSO> countryDefinitions = new();
     [SerializeField] private CountryDefinitionSO undefinedCountryDefinition;
     [SerializeField] public List<InfoCategoryDefinitionSO> infoCategoryDefinitions = new();
-    public HashSet<InfoCategory> activeInfoCategories = new();
-
+    
     [SerializeField] private CountryRendererEvent countryRendererEditStartedEvent;
 
+    public readonly HashSet<InfoCategory> activeInfoCategories = new();
     public readonly List<Country> countries = new();
+    public Country undefinedCountry { get; private set; }
     public List<Country> availableCountries => countries.Except(
         countryRenderers.Select(cRend => cRend.country)
         ).ToList();
-    public Country undefinedCountry { get; private set; }
-
+    
+    
     public Country GetCountryByName(string cName)
     {
         return countries.FirstOrDefault(c => c.countryName == cName);
@@ -70,16 +71,6 @@ public class MainManager : UnitySingleton<MainManager>
     {
         return infoCategoryDefinitions.FirstOrDefault(def => def.category == infoCategory);
     }
-
-    /*public double GetMaxValueForInfoCategory(InfoCategory infoCategory)
-    {
-        var iCatDef = GetInfoCategoryDefinition(infoCategory);
-        var relCategories = iCatDef.connectionThicknessRelativeTo.Intersect(activeInfoCategories);
-        var relMaxValues = infoCategoryMaxValues
-            .Where(pair => relCategories.Contains(pair.Key))
-            .Select(pair => pair.Value);
-        return relMaxValues.Max();
-    }*/
 
     public void OnCountryRendererAdded(CountryRenderer countryRenderer)
     {
