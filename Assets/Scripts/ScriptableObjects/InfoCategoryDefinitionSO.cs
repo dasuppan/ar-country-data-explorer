@@ -17,6 +17,5 @@ namespace ScriptableObjects.Countries
         public InfoCategory category;
         public Material splineMaterial;
         public List<DataFileConfigSO> fileConfigs;
-        public List<InfoCategory> connectionThicknessRelativeTo;
     }
 }
