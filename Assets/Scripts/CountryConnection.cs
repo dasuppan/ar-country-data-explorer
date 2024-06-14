@@ -117,16 +117,19 @@ public class CountryConnection : MonoBehaviour
         descriptionMesh.text = $"{value.ToFormattedString()}";
         descriptionMesh.color = this.splineMaterial.color;
 
-        for (int i = 0; i < SplineFlowIndicatorCount; i++)
+        if (value > 0.1f)
         {
-            var indicator = Instantiate(splineFlowIndicatorPrefab, transform);
-            indicator.GetComponent<MeshRenderer>().material = splineMaterial;
-            var animator = indicator.GetComponent<MoveAlongSpline>();
-            animator.Init(
-                splineContainer,
-                Mathf.Lerp(0, 1, (float)i / SplineFlowIndicatorCount)
-            );
-            splineAnimators.Add(animator);
+            for (int i = 0; i < SplineFlowIndicatorCount; i++)
+            {
+                var indicator = Instantiate(splineFlowIndicatorPrefab, transform);
+                indicator.GetComponent<MeshRenderer>().material = splineMaterial;
+                var animator = indicator.GetComponent<MoveAlongSpline>();
+                animator.Init(
+                    splineContainer,
+                    Mathf.Lerp(0, 1, (float)i / SplineFlowIndicatorCount)
+                );
+                splineAnimators.Add(animator);
+            }
         }
 
         initCompleted = true;
