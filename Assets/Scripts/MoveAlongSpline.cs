@@ -24,22 +24,27 @@ public class MoveAlongSpline: MonoBehaviour
     void Update()
     {
         if (!initCompleted) return;
+        
+        // Speed calc
         var splineLength = container.CalculateLength(); // This might be expensive
         var maxSpeed = splineLength / timeToTravel;
         
+        // Distance percentage calc
         distancePercentage += maxSpeed * Time.deltaTime / splineLength;
-        distancePercentage = Mathf.Clamp(distancePercentage, range.x, range.y);
+        // distancePercentage = Mathf.Clamp(distancePercentage, range.x, range.y);
 
+        // Limit check
+        if (distancePercentage > range.y)
+        {
+            distancePercentage -= range.y - range.x;
+        }
+        
+        // Move
         Vector3 currentPosition = container.Spline.EvaluatePosition(distancePercentage);
         transform.position = currentPosition;
 
-        if (distancePercentage + DirectionStepSize > range.y)
-        {
-            distancePercentage = range.x;
-        }
-
-        Vector3 nextPosition = container.EvaluatePosition(distancePercentage + DirectionStepSize);
+        /*Vector3 nextPosition = container.EvaluatePosition(distancePercentage + DirectionStepSize);
         Vector3 direction = nextPosition - currentPosition;
-        transform.rotation = Quaternion.LookRotation(direction, transform.up);
+        transform.rotation = Quaternion.LookRotation(direction, transform.up);*/
     }
 }

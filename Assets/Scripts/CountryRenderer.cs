@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects.Countries;
+using TMPro;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.AR;
 using Utils.GameEvents.Events;
@@ -15,9 +16,6 @@ public class CountryRenderer : MonoBehaviour
     [SerializeField] private CountryRendererEvent countryRendererAddedEvent;
     [SerializeField] private CountryRendererEvent countryRendererRemovedEvent;
     [SerializeField] private CountryRendererEvent countryRendererEditStartedEvent;
-    
-
-    private SpriteRenderer spriteRenderer;
 
     public readonly List<CountryRelation> relations = new();
 
@@ -26,23 +24,22 @@ public class CountryRenderer : MonoBehaviour
         .Where(cRend => cRend != this)
         .ToList();
 
-    public void SetCountry(Country country, bool suppressRemovedEvent = false)
+    public void SetCountry(Country country, bool suppressRemovedEvent = false, string countryNameOverride = null)
     {
         if (this.country == country) return;
         if (!suppressRemovedEvent)
         {
             countryRendererRemovedEvent.Raise(this);
         }
+
         this.country = country;
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        var spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         spriteRenderer.sprite = this.country.flagSprite;
+        var textRenderer = GetComponentInChildren<TextMeshProUGUI>();
+        textRenderer.text = countryNameOverride ?? this.country.countryName;
         Debug.LogWarning(
             $"Changing renderer to country {this.country.countryName} with {this.country.data.Count} data points.");
         countryRendererAddedEvent.Raise(this);
-        /*if (!suppressChangedEvent)
-        {
-            countryRendererChangedEvent.Raise(this);
-        }*/
     }
 
     public void AddMissingRelations()
@@ -103,7 +100,10 @@ public class CountryRenderer : MonoBehaviour
             c = MainManager.Instance.undefinedCountry;
         }
 
-        SetCountry(c, true);
+        SetCountry(c,
+            true,
+            c == MainManager.Instance.undefinedCountry ? "" : null
+        );
     }
 
     /*private void RemoveAllRelations()
