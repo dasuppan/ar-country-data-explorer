@@ -1,48 +1,45 @@
 using UnityEngine;
 
-namespace Utils
+public abstract class UnitySingleton<T> : MonoBehaviour where T : UnitySingleton<T>
 {
-    public abstract class UnitySingleton<T> : MonoBehaviour where T : UnitySingleton<T>
+    private static T _instance;
+    public static T Instance {  get { return _instance; } 
+        private set {} }
+
+    private bool _isPersistent = false;
+
+    public void SetPersistent(bool state)
     {
-        private static T _instance;
-        public static T Instance {  get { return _instance; } 
-            private set {} }
+        _isPersistent = state;
+        MakePersistent();
+    }
 
-        [SerializeField] private bool _isPersistent;
+    private void MakePersistent()
+    {
+        transform.parent = null;
+        DontDestroyOnLoad(this.gameObject);
+    }
+    
+    protected virtual void Awake()
+    {
+        Init();
+    }
 
-        public void SetPersistent(bool state)
+    protected virtual void Init()
+    {
+        if (_instance != null && _instance != this)
         {
-            _isPersistent = state;
-            MakePersistent();
+            Destroy(this.gameObject);
+            return;
         }
-
-        private void MakePersistent()
+        else
         {
-            transform.parent = null;
-            DontDestroyOnLoad(this.gameObject);
+            _instance = this as T;
         }
         
-        protected virtual void Awake()
+        if (_isPersistent)
         {
-            Init();
-        }
-
-        protected virtual void Init()
-        {
-            if (_instance != null && _instance != this)
-            {
-                Destroy(this.gameObject);
-                return;
-            }
-            else
-            {
-                _instance = this as T;
-            }
-            
-            if (_isPersistent)
-            {
-                MakePersistent();
-            }
+            MakePersistent();
         }
     }
 }
